@@ -1,0 +1,250 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.css' %}">
+{% endblock %}
+{% block pageheader %}
+    Empleados
+{% endblock %}
+{% block subpageheader %}
+    Listar
+{% endblock %}
+{% block breadcrumbs %}
+                            <div class="col-sm-5 text-right hidden-xs">
+                                <ol class="breadcrumb push-10-t">
+                                    <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+                                    <li><a class="link-effect" href="">Empleados</a></li>
+
+                                </ol>
+                            </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <!--Modal Eliminar-->
+        <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_eliminar" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">Eliminar Empleado</h3>
+                        </div>
+                        <div class="block-content">
+                            <span id="modal_mensaje_name"></span><span id="modal_name"></span>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="modal_idEmpleado" name="empleado_id">
+                            <button class="btn btn-sm btn-danger eliminar" type="button">Eliminar</button>
+                            <button id="modal_boton" class="btn btn-sm btn-primary" type="button" data-dismiss="modal" aria-hidden="true"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Eliminar-->
+                        <div class="block-content">
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <a href="{% url 'empleado:empleado_nuevo' %}" class="btn btn-primary"><i class="fa fa-plus-circle"></i> Crear Empleado</a>
+                                </div>
+                            </div>
+                            <!-- DataTables init on table by adding .js-dataTable-full class, functionality initialized in js/pages/base_tables_datatables.js -->
+                            <table class="table table-bordered table-striped js-dataTable-full" id="tabla_empleados">
+                                <thead>
+                                    <tr>
+                                        <th class="hidden-xs text-center" style="width: 5%;"></th>
+                                        <th style="width: 5%;">Nombre</th>
+                                        <th class="hidden-xs" style="width: 10%;">Apellido Paterno</th>
+                                        <th class="hidden-xs" style="width: 10%;">Apellido Materno</th>
+                                        <th class="hidden-xs" style="width: 10%;">Fecha de Nacimiento</th>
+                                        <th class="hidden-xs" style="width: 10%;">CURP</th>
+                                        <th class="hidden-xs" style="width: 10%;">RFC</th>
+                                        <th class="hidden-xs" style="width: 10%;">Dirección</th>
+                                        <th class="hidden-xs" style="width: 10%;">Numero de Empleado-Usuario</th>
+                                        <th class="text-center" style="width: 10%;">Acciones</th>
+                                        <th class="text-center" style="width: 10%;">Foto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    <!--END Page Content -->
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'empleado/js/empleado_datatable.js' %}"></script>
+    <script>
+    $(document).on('ready',function(){
+        "use strict";
+        $.ajax({url: "{% url 'empleado:datos_api' %}",
+            headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+            data:{lista: 'datos', activo: 1},
+            dataType:"json",
+            type:"GET"
+        }).done(function(data){
+            var $tabla = $('#tabla_empleados').DataTable();
+            $.each(data, function(index, item){
+                var direccion = '';
+                var fdireccion = '';
+                var grupo = 'Empleado';
+                $.each(item.usuario.groups, function(i,e) {
+                    if (item.usuario.groups[i].name == 'administrador')
+                        grupo = 'Administrador';
+                    else if (item.usuario.groups[i].name == 'configurador')
+                        grupo = 'Configurador';
+                    else if (item.usuario.groups[i].name == 'recursos_humanos')
+                        grupo = 'Recursos Humanos';
+                });
+                if (item.empleado.direccion.calle.length != 0)direccion += item.empleado.direccion.calle;
+                if (item.empleado.direccion.numero_interior.length != 0)direccion += ' No. Int. ' + item.empleado.direccion.numero_interior;
+                if (item.empleado.direccion.numero_interior.length != 0 && item.empleado.direccion.numero_exterior.length != 0)direccion += ',';
+                if (item.empleado.direccion.numero_exterior.length != 0)direccion += ' No. Ext. ' + item.empleado.direccion.numero_exterior;
+                if (item.empleado.direccion.asentamiento.length != 0)direccion += ', Asentamiento ' + item.empleado.direccion.asentamiento;
+                if (item.empleado.direccion.codigo_postal.length != 0)direccion += ', C.P. ' + item.empleado.direccion.codigo_postal;
+                if (item.empleado.direccion.ciudad.length != 0)direccion += ', ' + item.empleado.direccion.ciudad;
+                if (item.empleado.direccion.municipio.length != 0)direccion += ', ' + item.empleado.direccion.municipio;
+                if (item.empleado.direccion.estado.length != 0)direccion += ', ' + item.empleado.direccion.estado;
+                if (item.empleado.direccion.pais.length != 0)direccion += ', ' + item.empleado.direccion.pais;
+                if (item.empleado.direccion.datos_adicionales.length != 0)direccion += ', ' + item.empleado.direccion.datos_adicionales;
+                if (direccion.length>30)fdireccion = $.trim(direccion).substring(0, 30).split(" ").slice(0, -1).join(" ")+ "...";
+                else fdireccion=direccion;
+                var puntocontrol_instalacion="";
+                if (item.puntocontrol!=null) {
+                    puntocontrol_instalacion+=', Puntos de Control-Instalaciones: ';
+                    $.each(item.puntocontrol, function(i,e){
+                        if(i>0)puntocontrol_instalacion+=', ';
+                        puntocontrol_instalacion+=item.puntocontrol[i].nombre+'-'+item.puntocontrol[i].instalacion.nombre;
+                    });
+                }
+                var $td;
+                if(item.foto == null){
+                    $td = $('<td>').attr({'class':'text-center','style':'width: 10%;'}).append(
+                            $('<div>').attr('class','btn-group').append(
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-primary',
+                                                'type':'button',
+                                                'href':'{% url 'empleado:subir_foto_empleado' %}'+item.id,
+                                                'title':'Subir Foto'
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa fa-upload '))
+                            )
+                    );
+                }
+                else{
+                    $td = $('<td>').attr({'class':'text-center','style':'width: 10%;'}).append(
+                            $('<div>').attr('class','btn-group').append(
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-info',
+                                                'type':'button',
+                                                'href':'{% url 'empleado:cambiar_foto_empleado' %}'+item.id,
+                                                'title':'Cambiar Foto'
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa fa-upload ')),
+                                    $('<a>').attr(
+                                            {   'id':item.id+'btnvfoto',
+                                                'class':'btn btn-xs btn-success',
+                                                'type':'button',
+                                                'title':'Ver Foto'
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa fa-file-picture-o'))
+                            )
+                    );
+                    $('a#'+item.id+'btnvfoto').popover({trigger:'hover',
+                        content: '<img style="height: 148px; width: 142px" src="'+item.foto.foto+'">',
+                        html: true, placement: "left"});
+                }
+                var $tr = $('<tr>').attr('id','tr'+item.id).append(
+                        $('<td>').attr({'class':'hidden-xs','style':'width: 5%;'}).text(item.id),
+                        $('<td>').attr({'style':'width: 5%;'}).text(item.empleado.nombre),
+                        $('<td>').attr({'class':'hidden-xs','style':'width: 10%;'}).text(item.empleado.apellido_paterno),
+                        $('<td>').attr({'class':'hidden-xs','style':'width: 10%;'}).text(item.empleado.apellido_materno),
+                        $('<td>').attr({'class':'hidden-xs','style':'width: 10%;'}).text(item.empleado.fecha_nacimiento),
+                        $('<td>').attr({'class':'hidden-xs','style':'width: 10%;'}).text(item.empleado.curp),
+                        $('<td>').attr({'class':'hidden-xs','style':'width: 10%;'}).text(item.empleado.rfc),
+                        $('<td>').attr({'class':'hidden-xs',
+                                        'style':'width: 10%;',
+                                        'title':''+direccion
+                                        }).text(fdireccion),
+                        $('<td>').attr({'class':'hidden-xs',
+                                        'title':'Correo electronico: '+item.usuario.email+
+                                                ', Hora de entrada: '+item.hora_entrada.substring(0,5)+
+                                                ', Hora de salida: '+item.hora_salida.substring(0,5)+
+                                                puntocontrol_instalacion,
+                                        'style':'width: 10%;'}).text(item.numero_empleado+" "+grupo),
+                        $('<td>').attr({'class':'text-center','style':'width: 10%;'}).append(
+                                $('<div>').attr('class','btn-group').append(
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-info',
+                                                'type':'button',
+                                                'data-toggle':'tooltip',
+                                                'title':'Editar Empleado',
+                                                'id':''+item.id
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa fa-pencil')).data('id',item.id).click(function(){
+                                        var id = $(this).data('id');
+                                        window.location = "{% url 'empleado:empleado_editar' %}"+item.id;
+                                    }),
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-danger',
+                                                'type':'button',
+                                                'data-toggle':'modal',
+                                                'title':'Eliminar Empleado',
+                                                'id':''+item.id,
+                                                'data-name':' '+item.empleado.nombre+' '+item.empleado.apellido_paterno+' '+item.empleado.apellido_materno+'?',
+                                                'href':'#modal_eliminar'
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa  fa-trash')).data('id',item.id).click(function() {
+                                        var Eid = $(this).attr('id');
+                                        var name = $(this).data('name');
+                                        $('input#modal_idEmpleado').val(Eid);
+                                        $('span#modal_name').text(name).css("visibility", 'visible');
+                                        $("button.eliminar").attr("disabled", false).css("visibility", 'visible');
+                                        $("span#modal_mensaje_name").text('¿Esta seguro de eliminar el empleado');
+                                        $("button#modal_boton").text('Cancelar');
+                                    })
+                                ))
+                );
+                $td.appendTo($tr);
+                //$tr.appendTo('table#tabla_empleados tbody');
+                $tabla.row.add($tr).draw();
+            });
+        });
+            $("button.eliminar").on('click',function(e){
+                $("button.eliminar").attr("disabled", 'true');
+                var id_empleado = $("input#modal_idEmpleado").attr('value');
+                $.ajax({url:"{% url "empleado:empleado_eliminar" %}",
+                    headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                    data: {"id":id_empleado},
+                    type:'DELETE',
+                    dataType:'json'
+                }).done(function(data){
+                    if(data.exito){
+                        var table = $('#tabla_empleados').DataTable();
+                        table.row("#tr"+id_empleado).remove().draw();
+                        //$("#tr"+id_empleado).remove();
+                        $('div#modal_eliminar').modal('hide');
+                        $.notify({// options
+                                    icon: 'fa fa-trash ',
+                                    title: '<strong>¡ELIMINACIÓN CORRECTA!</strong><br>',
+                                    message: 'Se ha eliminado el empleado correctamente.'
+                                }, {// settings
+                                    type: 'danger',
+                                    placement: {
+                                        from: "top",
+                                        align: "center"
+                                    }
+                                }
+                        );
+                    }
+                });
+            })
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,2 @@
+Aqui solo debe haber un archivo .png con el nombre logo:
+logo.png

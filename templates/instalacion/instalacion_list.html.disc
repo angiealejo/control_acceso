@@ -1,0 +1,189 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.css' %}">
+
+{% endblock %}
+{% block pageheader %}
+    Instalaciones
+{% endblock %}
+{% block subpageheader %}
+    Listar
+{% endblock %}
+{% block breadcrumbs %}
+                            <div class="col-sm-5 text-right hidden-xs">
+                                <ol class="breadcrumb push-10-t">
+                                    <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+                                    <li><a class="link-effect" href="">Instalaciones</a></li>
+
+                                </ol>
+                            </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <!--Modal Eliminar-->
+        <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_eliminar" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">Eliminar Instalación</h3>
+                        </div>
+                        <div class="block-content">
+                            <span id="modal_mensaje_name"></span><span id="modal_name"></span>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="modal_idInstalacion" name="instalacion_id">
+                            <button class="btn btn-sm btn-danger eliminar" type="button">Eliminar</button>
+                            <button id="modal_boton" class="btn btn-sm btn-primary" type="button" data-dismiss="modal" aria-hidden="true"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Eliminar-->
+                        <div class="block-content">
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <a href="{% url 'instalacion:instalacion_nuevo' %}" class="btn btn-primary"><i class="fa fa-plus-circle"></i> Crear Instalacion</a>
+                                </div>
+                            </div>
+                            <!-- DataTables init on table by adding .js-dataTable-full class, functionality initialized in js/pages/base_tables_datatables.js -->
+                            <table class="table table-bordered table-striped js-dataTable-full" id="tabla_instalaciones">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 5%;"></th>
+                                        <th style="width: 5%;">Nombre</th>
+                                        <th style="width: 5%;" class="hidden-xs" >Dirección</th>
+                                        <th style="width: 5%;" id="tabla_acciones" class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    <!--END Page Content -->
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'instalacion/js/instalacion_datatable.js' %}"></script>
+    <script>
+    $(document).on('ready',function(){
+        "use strict";
+        $.ajax({url: "{% url 'instalacion:instalacion_api' %}",
+            headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+            data:{lista:'instalaciones',activo:1},
+            dataType:"json",
+            type:"GET"
+        }).done(function(data){
+            var $tabla = $('#tabla_instalaciones').DataTable();
+            $.each(data, function(index, item){
+                var direccion = '';
+                if (item.direccion.calle.length != 0)direccion += item.direccion.calle;
+                if (item.direccion.numero_interior.length != 0)direccion += ' No. Int. ' + item.direccion.numero_interior;
+                if (item.direccion.numero_interior.length != 0 && item.direccion.numero_exterior.length != 0)direccion += ',';
+                if (item.direccion.numero_exterior.length != 0)direccion += ' No. Ext. ' + item.direccion.numero_exterior + '.';
+                if (item.direccion.datos_adicionales.length != 0) direccion += ' Referencia: ' + item.direccion.datos_adicionales;
+                if (item.direccion.asentamiento.length != 0)direccion += ', Asentamiento ' + item.direccion.asentamiento;
+                if (item.direccion.codigo_postal.length != 0)direccion += ', C.P. ' + item.direccion.codigo_postal;
+                if (item.direccion.ciudad.length != 0)direccion += ', ' + item.direccion.ciudad;
+                if (item.direccion.municipio.length != 0)direccion += ', ' + item.direccion.municipio;
+                if (item.direccion.estado.length != 0)direccion += ', ' + item.direccion.estado;
+                if (item.direccion.pais.length != 0)direccion += ', ' + item.direccion.pais;
+                var $tr = $('<tr>').attr('id','tr'+item.id).append(
+                        $('<td>').text(item.id),
+                        $('<td>').text(item.nombre),
+                        $('<td>').attr({'class':'hidden-xs',
+                                        'title':''+direccion
+                                        }).text(direccion),
+                        $('<td>').attr('class','text-center').append(
+                                $('<div>').attr('class','btn-group').append(
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-primary',
+                                                'type':'button',
+                                                'data-toggle':'tooltip',
+                                                'title':'Añadir Punto de Control',
+                                                'id':''+item.id
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','si si-pointer')).data('id',item.id).click(function(){
+                                        var id = $(this).data('id');
+                                        window.location = "{% url 'punto_control:punto_control_nuevo_instalacion' %}"+item.id;
+                                    }),
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-info',
+                                                'type':'button',
+                                                'data-toggle':'tooltip',
+                                                'title':'Editar instalación',
+                                                'id':''+item.id
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa fa-pencil')).data('id',item.id).click(function(){
+                                        var id = $(this).data('id');
+                                        window.location = "{% url 'instalacion:instalacion_editar' %}"+item.id;
+                                    }),
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-danger',
+                                                'type':'button',
+                                                'data-toggle':'modal',
+                                                'title':'Eliminar Instalacion',
+                                                'id':''+item.id,
+                                                'data-name':' '+item.nombre+'?',
+                                                'href':'#modal_eliminar'
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa fa-trash')).data('id',item.id).click(function() {
+                                        var InstalacionId = $(this).attr('id');
+                                        var name = $(this).data('name');
+                                        $('input#modal_idInstalacion').val(InstalacionId);
+                                        $('span#modal_name').text(name).css("visibility", 'visible');
+                                        $("button.eliminar").attr("disabled", false).css("visibility", 'visible');
+                                        $("span#modal_mensaje_name").text('¿Esta seguro de eliminar la instalación');
+                                        $("button#modal_boton").text('Cancelar');
+                                    })
+                                ))
+                );
+                //$tr.appendTo('#tabla_instalaciones tbody');
+                $tabla.row.add($tr).draw();
+            });
+        });
+
+    });
+    </script>
+    <script>
+        $(document).on('ready',function(){
+            $("button.eliminar").on('click',function(e){
+                $("button.eliminar").attr("disabled", 'true');
+                var id_instalacion = $("input#modal_idInstalacion").attr('value');
+                $.ajax({
+                    url:"{% url "instalacion:instalacion_eliminar" %}",
+                    headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                    data: {"id":id_instalacion},
+                    type:'DELETE',
+                    dataType:'json'
+                }).done(function(data){
+                    if(data.exito){
+                        var table = $('#tabla_instalaciones').DataTable();
+                        table.row("#tr"+id_instalacion).remove().draw();
+                        //$("#tr"+id_instalacion).remove();
+                        $('div#modal_eliminar').modal('hide');
+                        $.notify({// options
+                                    icon: 'fa fa-trash ',
+                                    title: '<strong>¡ELIMINACIÓN CORRECTA!</strong><br>',
+                                    message: 'Se ha eliminado la instalación correctamente.'
+                                }, {// settings
+                                    type: 'danger',
+                                    placement: {
+                                        from: "top",
+                                        align: "center"
+                                    }
+                                }
+                        );
+                    }
+                });
+            })
+        });
+    </script>
+{% endblock %}

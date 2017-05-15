@@ -1,0 +1,151 @@
+{% load groups_extras %}
+{% load staticfiles %}
+<!-- Side Header -->
+<div class="side-header side-content bg-white-op">
+    <!-- Layout API, functionality initialized in App() -> uiLayoutApi() -->
+    <button class="btn btn-link text-gray pull-right hidden-md hidden-lg" type="button" data-toggle="layout" data-action="sidebar_close">
+        <i class="fa fa-times"></i>
+    </button>
+    <!-- Themes functionality initialized in App() -> uiHandleTheme() -->
+    <!--<div class="btn-group pull-right">
+        <button class="btn btn-link text-gray dropdown-toggle" data-toggle="dropdown" type="button">
+            <i class="si si-drop"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-right font-s13 sidebar-mini-hide">
+            <li>
+                <a data-toggle="theme" data-theme="default" tabindex="-1" href="javascript:void(0)">
+                    <i class="fa fa-circle text-default pull-right"></i> <span class="font-w600">Default</span>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="theme" data-theme="{% static 'assets/css/themes/amethyst.min.css' %}" tabindex="-1" href="javascript:void(0)">
+                    <i class="fa fa-circle text-amethyst pull-right"></i> <span class="font-w600">Amethyst</span>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="theme" data-theme="{% static 'assets/css/themes/city.min.css' %}" tabindex="-1" href="javascript:void(0)">
+                    <i class="fa fa-circle text-city pull-right"></i> <span class="font-w600">City</span>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="theme" data-theme="{% static 'assets/css/themes/flat.min.css' %}" tabindex="-1" href="javascript:void(0)">
+                    <i class="fa fa-circle text-flat pull-right"></i> <span class="font-w600">Flat</span>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="theme" data-theme="{% static 'assets/css/themes/modern.min.css' %}" tabindex="-1" href="javascript:void(0)">
+                    <i class="fa fa-circle text-modern pull-right"></i> <span class="font-w600">Modern</span>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="theme" data-theme="{% static 'assets/css/themes/smooth.min.css' %}" tabindex="-1" href="javascript:void(0)">
+                    <i class="fa fa-circle text-smooth pull-right"></i> <span class="font-w600">Smooth</span>
+                </a>
+            </li>
+        </ul>
+    </div>-->
+    {% if request.session.logo_existe %}
+    <img style="width: auto; height: auto;" src="{% static 'logo/logo.png' %}" class="img-responsive">
+    {% endif %}
+    <!--<a class="h5 text-white" href="{% url 'home' %}">
+        <i class="fa  fa-clock-o text-primary"></i><span class="h4 font-w500 sidebar-mini-hide"> Control De Acceso</span>
+    </a>-->
+</div>
+<!-- END Side Header -->
+<!-- Side Content -->
+<div class="side-content">
+    <ul class="nav-main">
+        {% ifusergroup empleado %}
+            <li id="li-sidebar-left-home">
+                <a class="{% if request.resolver_match.url_name == 'home' or request.resolver_match.namespace == 'usuario'%}active{% endif %}" data-toggle="nav-submenu" href="{% url 'home' %}"><i class="si si-home"></i><span class="sidebar-mini-hide">Inicio</span></a>
+            </li>
+            {% ifusergroup administrador|recursos_humanos %}
+            <li id="li-sidebar-left-empleado" {% if request.resolver_match.namespace == 'empleado' %}class="open"{% endif %}>
+                <a class="nav-submenu {% if request.resolver_match.namespace == 'empleado' %}active{% endif %}" data-toggle="nav-submenu" href="#" onclick="return false;" onclick="return false;"><i class="si si-emoticon-smile"></i><span class="sidebar-mini-hide">Empleados</span></a>
+                <ul>
+                    <li>
+                        <a  href="{% url 'empleado:empleado_nuevo' %}" id="crear-empleado">Registrar Nuevo</a>
+                    </li>
+                    <li>
+                        <a  href="{% url 'empleado:importar_excel' %}" id="importar-empleados">Registrar Varios</a>
+                    </li>
+                    <li>
+                        <a  href="{% url 'empleado:empleado_list' %}" id="listar-empleado">Listar Empleados</a>
+                    </li>
+                    {% if request.user.is_staff and request.user.is_superuser %}
+                    <li>
+                        <a  href="{% url 'empleado:empleado_recycle' %}" id="reciclaje-empleado">Papelera de Reciclaje</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </li>
+            {% endifusergroup %}
+            {% ifusergroup administrador|configurador %}
+            <li id="li-sidebar-left-instalacion" {% if request.resolver_match.namespace == 'instalacion' %}class="open"{% endif %}>
+                <a class="nav-submenu {% if request.resolver_match.namespace == 'instalacion' %}active{% endif %}" data-toggle="nav-submenu" href="#" onclick="return false;"><i class="fa fa-building-o"></i><span class="sidebar-mini-hide">Instalaciones</span></a>
+                <ul>
+                    <li>
+                        <a  href="{% url 'instalacion:instalacion_nuevo' %}" id="crear-instalacion">Registrar Nuevo</a>
+                    </li>
+                    <li>
+                        <a  href="{% url 'instalacion:instalacion_list' %}" id="listar-instalacion">Listar Instalaciones</a>
+                    </li>
+                    {% if request.user.is_staff and request.user.is_superuser %}
+                    <li>
+                        <a  href="{% url 'instalacion:instalacion_recycle' %}" id="reciclaje-instalacion">Papelera de Reciclaje</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </li>
+            <li id="li-sidebar-left-punto_control" {% if request.resolver_match.namespace == 'punto_control' %}class="open"{% endif %}>
+                <a class="nav-submenu {% if request.resolver_match.namespace == 'punto_control' %}active{% endif %}" data-toggle="nav-submenu" href="#" onclick="return false;"><i class="si si-pointer"></i><span class="sidebar-mini-hide">Puntos de Control</span></a>
+                <ul>
+                    <li>
+                        <a  href="{% url 'punto_control:punto_control_nuevo' %}" id="crear-punto_control">Registrar Nuevo</a>
+                    </li>
+                    <li>
+                        <a  href="{% url 'punto_control:punto_control_list' %}" id="listar-punto_control">Listar Puntos de Control</a>
+                    </li>
+                    {% if request.user.is_staff and request.user.is_superuser %}
+                    <li>
+                        <a  href="{% url 'punto_control:punto_control_recycle' %}" id="reciclaje-punto_control">Papelera de Reciclaje</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </li>
+            {% endifusergroup %}
+            {% ifusergroup administrador|configurador|recursos_humanos %}
+           <li id="li-sidebar-left-home" {% if request.resolver_match.namespace == 'configuracion' %}class="open"{% endif %}>
+                <a class="nav-submenu {% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}"
+                   data-toggle="nav-submenu" href="#" onclick="return false;">
+                    <i class="fa fa-desktop"></i><span class="sidebar-mini-hide">Configuracion</span></a>
+               <ul>
+                   {% ifusergroup administrador|configurador %}
+                    <li>
+                        <a  href="{% url 'configuracion:configuracion_servidor' %}" id="servidor">General</a>
+                    </li>
+                   {% endifusergroup %}
+                    <li>
+                        <a  href="{% url 'configuracion:configuracion_lista' %}" id="listar-configuraciones">Listar Específicas</a>
+                    </li>
+                    <li>
+                        <a  href="{% url 'configuracion:configuracion_empleado' %}" id="servidor">Especifica</a>
+                    </li>
+                </ul>
+           </li>
+            {% endifusergroup %}
+            {% ifusergroup administrador|recursos_humanos %}
+            <li id="li-sidebar-left-reportes">
+                <a class="{% if request.resolver_match.namespace == 'reporte'%}active{% endif %}" data-toggle="nav-submenu" href="{% url 'reporte:reporte_recursos' %}">
+                    <i class="si si-folder"></i><span class="sidebar-mini-hide">Reportes</span></a>
+            </li>
+            {% endifusergroup %}
+            <li id="li-sidebar-left-bitacora">
+                <a class="{% if request.resolver_match.namespace == 'bitacora'%}active{% endif %}" data-toggle="nav-submenu" href="{% url 'bitacora:bitacora_empleado' %}" >
+                    <i class="si si-calendar"></i><span class="sidebar-mini-hide">Bitácora</span></a>
+            </li>
+        {% endifusergroup %}
+
+    </ul>
+</div>
+<!-- END Side Content -->

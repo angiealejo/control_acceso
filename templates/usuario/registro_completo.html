@@ -1,0 +1,28 @@
+{% extends 'base/base_pages_login.html' %}
+{% block title %}
+    Registro Completo
+{% endblock %}
+{% load i18n %}
+{% block content%}
+ <main id="main-container">
+                <!-- Hero Content -->
+                <div class="bg-primary-dark">
+                    <section class="content content-full content-boxed">
+                        <!-- Section Content -->
+                        <div class="push-100-t push-50 text-center">
+                            <h1 class="h1 text-white push-10 " data-toggle="appear" data-class="animated fadeInDown">Registro en Control de Acceso Completo</h1>
+                            <!--<h2 class="h5 text-white-op " data-toggle="appear" data-class="animated fadeInDown">Se ha enviado un correo a su email con su nombre de usuario, o número de empleado, y contraseña para que pueda iniciar sesión de nuevo.</h2>-->
+                            {% if registroCompleto %}
+                                <br>
+                                <h2 class="h2 text-white-op " data-toggle="appear" data-class="animated fadeInDown">Su nombre de usuario es: {{ usuario_empleado }}</h2>
+                                <h2 class="h2 text-white-op " data-toggle="appear" data-class="animated fadeInDown">Y su contraseña es: {{ numero_empleado }}</h2>
+                                <br>
+                            {% endif %}
+                            <a href="{% url 'login'%}" data-toggle="tooltip" data-placement="left" title="Iniciar Sesión"><i class="si si-login"></i> Volver y loguearse</a>
+                        </div>
+                        <!-- END Section Content -->
+                    </section>
+                </div>
+                <!-- END Hero Content -->
+            </main>
+{% endblock %}

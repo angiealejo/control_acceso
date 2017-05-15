@@ -1,0 +1,187 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/bootstrap-fileinput/fileinput.min.css' %}">
+{% endblock %}
+{% block pageheader %}
+    {% if request.resolver_match.url_name == 'subir_foto_empleado' or request.resolver_match.url_name == 'cambiar_foto_empleado' %}
+        Foto de Empleado
+    {% else %}
+        Mi Foto de Empleado
+    {% endif %}
+{% endblock %}
+{% block subpageheader %}
+    {% if request.resolver_match.url_name == 'subir_foto_empleado' %}
+        Subir
+    {% elif request.resolver_match.url_name == 'cambiar_foto_empleado' %}
+        Cambiar
+    {% elif request.resolver_match.url_name == 'subir_foto_administrador' %}
+        Subir
+    {% elif request.resolver_match.url_name == 'cambiar_foto_administrador' %}
+        Cambiar
+    {% endif %}
+{% endblock %}
+
+{% block breadcrumbs %}
+
+    <div class="col-sm-5 text-right hidden-xs" xmlns="http://www.w3.org/1999/html">
+        <ol class="breadcrumb push-10-t">
+            <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+            {% if request.resolver_match.url_name == 'subir_foto_empleado' or request.resolver_match.url_name == 'cambiar_foto_empleado' %}
+            <li><a class="link-effect" href="{% url 'empleado:empleado_list' %}">Empleado</a></li>
+            {% endif %}
+            <li><a class="link-effect" href="">
+                {% if request.resolver_match.url_name == 'subir_foto_empleado' %}
+                    Subir Foto de Empleado
+                {% elif request.resolver_match.url_name == 'cambiar_foto_empleado' %}
+                    Cambiar Foto de Empleado
+                {% elif request.resolver_match.url_name == 'subir_foto_administrador' %}
+                    Subir mi Foto de Empleado
+                {% elif request.resolver_match.url_name == 'cambiar_foto_administrador' %}
+                    Cambiar mi Foto de Empleado
+                {% endif %}
+            </a></li>
+        </ol>
+    </div>
+
+{% endblock %}
+
+{% block content %}
+    <!-- MODAL ELIMINAR -->
+    <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_error" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-top">
+            <div class="modal-content">
+                <div class="block block-themed block-transparent remove-margin-b">
+                    <div class="block-header bg-primary-dark">
+                        <h3 class="block-title">Error</h3>
+                    </div>
+                    <div class="block-content">
+                        EL registro de foto empleado no existe
+                    </div>
+                    <div class="modal-footer">
+                        <a href="
+                        {% if request.resolver_match.url_name == 'subir_foto_empleado' or request.resolver_match.url_name == 'cambiar_foto_empleado' %}
+                            {% url 'empleado:empleado_list' %}
+                        {% elif request.resolver_match.url_name == 'subir_foto_administrador' or request.resolver_match.url_name == 'cambiar_foto_administrador' %}
+                            {% url 'home' %}
+                        {% endif %}
+                        " class="btn btn-sm btn-info" type="button">Aceptar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIN MODAL ELIMINAR -->
+
+<div class="content">
+    <form id="fotoempleado_form" class="js-validation-material form-horizontal push-10-t" enctype="multipart/form-data" action="" method="post">
+    {% csrf_token %}
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="block block-rounded">
+                    <div class="block-header bg-primary">
+                        <h3 class="block-title">Foto de Empleado</h3>
+                    </div>
+                    <div class="block-content">
+                        <div class="row">
+                            <div class="col-md-11 col-md-offset-2">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            <div id='div_foto_imagen' class="text-center" style="width: 190px;">
+                                                <img id='id_foto_imagen' class="img-responsive" src="" style="height: auto; width: auto;">
+                                            </div>
+                                            {{ form.foto }}
+                                            <label id="id_foto_label" for="{{ form.foto.name }}">{{ form.foto.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-5">
+                                <div class="form-group">
+                                     <div class="col-sm-9">
+                                         <input type="submit" value="Guardar" class="btn btn-primary guardar" disabled="true">
+                                         <a href="
+                                         {% if request.resolver_match.url_name == 'subir_foto_empleado' or request.resolver_match.url_name == 'cambiar_foto_empleado' %}
+                                            {% url 'empleado:empleado_list' %}
+                                         {% elif request.resolver_match.url_name == 'subir_foto_administrador' or request.resolver_match.url_name == 'cambiar_foto_administrador' %}
+                                            {% url 'home' %}
+                                         {% endif %}
+                                         " class="btn btn-danger" >Cancelar</a>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/plugins/bootstrap-fileinput/fileinput.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-fileinput/fileinput_locale_es.js' %}"></script>
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/messages_es.min.js' %}"></script>
+    <script src="{% static 'archivo/js/fotoempleado_form_validation.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            "use strict";
+            cargar();
+            function cargar()
+            {   $("input#id_foto").fileinput({
+                language: 'es',
+                showCancel: false,
+                showUpload: false,
+                showClose: false,
+                allowedFileExtensions : ['jpg', 'jpeg', 'png'],
+                maxFileSize: 2000,
+                dropZoneEnabled: true
+            });
+                var id = {{ id }};
+                if(id==0)
+                {   $("input.guardar").removeAttr("disabled");
+                    $("img#id_foto_imagen").remove();
+                }
+                else
+                {   $.ajax({url: "{% url 'archivo:foto_empleado_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{fotoempleado:id},
+                        dataType:"json",
+                        type:"GET"
+                    }).done(function(data) {
+                        $("img#id_foto_imagen").attr('src', data.foto);
+                        $("label#id_foto_label").text('Cambiar Foto Actual:');
+                        $("input.guardar").removeAttr("disabled");
+                    }).fail(function(){
+                        $('form#fotoempleado_form').remove();
+                        $('div#modal_error').modal('show');
+                    })
+
+                }
+            }
+            $("form#form_punto_control").submit(function(event){
+                $("input.guardar").attr("disabled", true);
+            });
+            $('input#id_foto').on('change',function(e) {
+                $("label#id_foto_label").text('Subir Nueva Foto:');
+                $('img#id_foto_imagen').remove();
+            });
+            $("button.fileinput-remove-button").on('click',function(e) {
+                $('<img>').attr({'id':'id_foto_imagen','class':'img-responsive','src':"",'style':'height: auto; width: auto;'}).appendTo("div#div_foto_imagen");
+                cargar();
+            });
+        });
+    </script>
+
+
+{% endblock %}

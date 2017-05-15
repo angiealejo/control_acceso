@@ -1,0 +1,197 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/select2/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/select2/select2-bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/bootstrap-timepicker/bootstrap-timepicker.min.css' %}">
+{% endblock %}
+
+{% block pageheader %}
+    Configuración
+{% endblock %}
+{% block subpageheader %}
+    Empleado
+{% endblock %}
+
+{% block breadcrumbs %}
+
+    <div class="col-sm-5 text-right hidden-xs" xmlns="http://www.w3.org/1999/html">
+        <ol class="breadcrumb push-10-t">
+            <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+            <li><a class="link-effect" href="{% url 'configuracion:configuracion_lista' %}">Configuracion</a></li>
+            <li><a class="link-effect" href="">Empleado</a></li>
+
+        </ol>
+    </div>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="content">
+    <form id="form_configuracion" class="js-validation-material form-horizontal push-10-t" method="POST">
+    {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <div class="block block-rounded">
+                    <div class="block-header bg-primary">
+                        <h3 class="block-title">Configuracion Empleado</h3>
+                    </div>
+                    <div class="block-content">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="form-group">
+                                        <div class="col-sm-8 col-sm-offset-2">
+                                            <div class="form-material form-material-primary">
+                                             {{ form.empleado }}
+                                             <label for="{{ form.empleado.name }}">{{ form.empleado.label }}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="form-group">
+                                        <div class="col-sm-8 col-sm-offset-2">
+                                            <div class="form-material form-material-primary">
+                                                {{ form.minutos_tolerancia }}
+                                                <label for="{{ form.minutos_tolerancia.name }}">{{ form.minutos_tolerancia.label }}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-10 col-sm-offset-1" id="empleado">
+                            </div>
+                        </div>
+                        <div class="row" style="padding-top: 10px">
+                            <div class="form-group">
+                                <div class="col-sm-4 col-sm-offset-4">
+                                    <input type="submit" value="Guardar" class="btn btn-primary guardar" disabled="true">
+                                    <a href="{% url 'configuracion:configuracion_lista' %}" class="btn btn-danger" >Cancelar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/plugins/bootstrap-timepicker/bootstrap-timepicker.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/select2/select2.full.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/select2/select2_locale_es.js' %}"></script>
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/messages_es.min.js' %}"></script>
+    <script src="{% static 'configuracion/js/configuracion_form_validation.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            "use strict";
+            $("form#form_configuracion").submit(function(event){
+                $("input.guardar").attr("disabled", true);
+            });
+            $("select#id_empleado").on('change',function(e) {
+                var id = $("select#id_empleado").val();
+                var $div_empleado = $("div#empleado");
+                $div_empleado.empty();
+                $.ajax({url: "{% url 'empleado:datos_api' %}",
+                    headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                    data:{empleado:id},
+                    dataType:"json",
+                    type:"GET"
+                }).done(function(data) {
+                    $div_empleado.append(
+                            $('<h5>').css('padding-top', '20px').text("No. Empleado: "+data.numero_empleado),
+                            $('<h5>').css('padding-top', '20px').text("Nombre: "+data.empleado.nombre + " " + data.empleado.apellido_paterno + " " + data.empleado.apellido_materno)
+                    );
+                    if (data.puntocontrol.length>0){
+                        $div_empleado.append($('<h5>').css('padding-top', '20px').text("Instalaciones - Puntos de Control:"));
+                        $.each(data.puntocontrol, function(i, e){
+                            $div_empleado.append(
+                                    $('<h5>').css('padding-top', '5px').text(data.puntocontrol[i].instalacion.nombre + " - " + data.puntocontrol[i].nombre)
+                            );
+                        });
+                    }
+                    $div_empleado.append($('<br>'));
+                }).fail(function () {
+                    $("div#empleado").empty();
+                });
+            });
+            cargar();
+            function cargarConfiguracionesServidor() {
+                $.ajax({url: "{% url 'configuracion:configuracion_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{servidor:true},
+                        dataType:"json",
+                        type:"GET"
+                    }).done(function(data) {
+                        $("input#id_minutos_tolerancia").val(data.minutos_tolerancia);
+                    });
+            }
+            function cargar()
+            {   var id = {{ id }};
+                if(id==0)
+                {   cargarConfiguracionesServidor();
+                    $("select#id_empleado").select2({
+                        placeholder: "Elija un Empleado",
+                        language: "es",
+                        minimumInputLength: 3,
+                        minimumResultsForSearch: 10,
+                        allowClear:true,
+                        ajax: {
+                            headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                            url: "{% url 'empleado:datos_api' %}",
+                            type:"GET",
+                            dataType:"json",
+                            data: function (term) {
+                                return {
+                                    term: term,
+                                    configuracion: true
+                                };
+                            },
+                            processResults: function (data) {
+                                return {
+                                    results: $.map(data, function (item) {
+                                        return {
+                                            'id': item.id,
+                                            'text': item.numero_empleado + " - " + item.empleado.nombre + " " + item.empleado.apellido_paterno + " " + item.empleado.apellido_materno
+                                        }
+                                    })
+                                };
+                            }
+                        }
+                    });
+                    $("input.guardar").removeAttr("disabled");
+                }
+                else
+                {   $.ajax({url: "{% url 'configuracion:configuracion_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{id:id},
+                        dataType:"json",
+                        type:"GET"
+                    }).done(function(data) {
+                        $("input#id_minutos_tolerancia").val(data.minutos_tolerancia);
+                        $("select#id_empleado").empty().select2({language:"es"}).append(
+                                $('<option>').val(data.empleado.id).text(
+                                        data.empleado.numero_empleado + " - " + data.empleado.empleado.nombre + " " + data.empleado.empleado.apellido_paterno + " " + data.empleado.empleado.apellido_materno)
+                        ).val(data.empleado.id).change().attr('readonly,readonly');
+                        $("input.guardar").removeAttr("disabled");
+                    }).fail(function(){
+                        $('form#form_configuracion').remove();
+                        $('div#modal_error').modal('show');
+                    })
+
+                }
+            }
+        });
+    </script>
+{% endblock %}

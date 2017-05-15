@@ -1,0 +1,10 @@
+#python==2.7.11
+django==1.8.10
+psycopg2==2.6.1
+Pillow==3.1.1
+djangorestframework==3.3.2
+openpyxl==2.3.5
+et-xmlfile==1.0.1
+jdcal==1.2
+django-ses==0.7.1
+boto==2.40.0

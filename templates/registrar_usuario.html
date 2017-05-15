@@ -1,0 +1,102 @@
+{% extends 'base/base_pages_login.html' %}
+{% block title %}
+    Registrar
+{% endblock %}
+{% load i18n %}
+{% block content %}
+     <!-- Register Content -->
+        <div class="content overflow-hidden">
+            <div class="row">
+                <div class="col-sm-10 col-sm-offset-1">
+                    <!-- Register Block -->
+                    <div class="block block-themed animated fadeIn">
+                        <div class="block-header bg-success">
+                            <ul class="block-options">
+                                <li>
+                                    <a href="{% url 'login' %}" data-toggle="tooltip" data-placement="left" title="Iniciar sesión"><i class="si si-login"></i></a>
+                                </li>
+                            </ul>
+                            <h3 class="block-title">Registrar</h3>
+                        </div>
+                        <div class="block-content block-content-full block-content-narrow">
+                            <!-- Register Title -->
+                            <h1 class="text-center">Control de Accesos</h1>
+                            <p class="text-center">Por favor, rellene los siguientes datos para crear una nueva cuenta.</p>
+                            <!-- END Register Title -->
+
+                            <!-- Register Form -->
+                            <!-- jQuery Validation (.js-validation-register class is initialized in js/pages/base_pages_register.js) -->
+                            <!-- For more examples you can check out https://github.com/jzaefferer/jquery-validation -->
+                            <form class="js-validation-register form-horizontal push-50-t push-50" action="" method="post">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="col-sm-11">
+                                            <div class="form-group {% if form.username.errors %}has-error{% endif %}">
+                                                <div class="form-material form-material-success">
+                                                    {{ form.username }}
+                                                    <label for="{{ form.username.name }}">{{ form.username.label }}</label>
+                                                    <div class="help-block text-right animated fadeInDown" id="{{ form.username.name }}">
+                                                        {% for error in form.username.errors %}{{ error|escape }}{% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="col-sm-11">
+                                            <div class="form-group {% if form.email.errors %}has-error{% endif %}">
+                                                <div class="form-material form-material-success">
+                                                    {{ form.email }}
+                                                    <label for="{{ form.email.name }}">{{ form.email.label }}</label>
+                                                    <div class="help-block text-right animated fadeInDown" id="{{ form.email.name }}">
+                                                        {% for error in form.email.errors %}{{ error|escape }}{% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="col-sm-11">
+                                            <div class="form-group {% if form.password1.errors %}has-error{% endif %}">
+                                                <div class="form-material form-material-success">
+                                                    {{ form.password1 }}
+                                                    <label for="{{ form.password1.name }}">{{ form.password1.label }}</label>
+                                                    <div class="help-block text-right animated fadeInDown" id="{{ form.password1.name }}">
+                                                        {% for error in form.password1.errors %}{{ error|escape }}{% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="col-sm-11">
+                                            <div class="form-group {% if form.password2.errors %}has-error{% endif %}">
+                                                <div class="form-material form-material-success">
+                                                    {{ form.password2 }}
+                                                    <label for="{{ form.password2.name }}">{{ form.password2.label }}</label>
+                                                    <div class="help-block text-right animated fadeInDown" id="{{ form.password2.name }}">
+                                                        {% for error in form.password2.errors %}{{ error|escape }}{% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-sm-6 col-sm-offset-3">
+                                        <button class="btn btn-block btn-success" type="submit"><i class="fa fa-plus pull-right"></i> Regístrate</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <!-- END Register Form -->
+                        </div>
+                    </div>
+                    <!-- END Register Block -->
+                </div>
+            </div>
+        </div>
+        <!-- END Register Content -->
+{% endblock %}

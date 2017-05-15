@@ -1,0 +1,384 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.css' %}">
+{% endblock %}
+{% block pageheader %}
+    Empleados
+{% endblock %}
+{% block subpageheader %}
+    Listar
+{% endblock %}
+{% block breadcrumbs %}
+                            <div class="col-sm-5 text-right hidden-xs">
+                                <ol class="breadcrumb push-10-t">
+                                    <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+                                    <li><a class="link-effect" href="">Empleados</a></li>
+
+                                </ol>
+                            </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <!--Modal Eliminar-->
+        <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_acciones" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div id="block_empleado" class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 id="modal_titulo_name" class="block-title"></h3>
+                        </div>
+                        <div id="div_acciones" class="block-content">
+                            <span id="modal_mensaje_name"></span><span id="modal_name"></span>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="modal_idEmpleado" name="empleado_id">
+                            <button id="btn_acciones" class="" type="button"></button>
+                            <button id="modal_boton" class="btn btn-sm btn-primary" type="button" data-dismiss="modal" aria-hidden="true"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Eliminar-->
+                        <div class="block-content">
+                            <form id="form_exportar_excel" method="GET" action="{% url 'empleado:exportar_empleados' %}">
+                            <div class="btn-group">
+                                <a href="{% url 'empleado:empleado_nuevo' %}" class="btn btn-primary"><i class="fa fa-plus-circle"></i> Registrar Nuevo Empleado</a>
+                                <a href="{% url 'empleado:importar_excel' %}" class="btn btn-success"><i class="fa fa-plus-circle"></i> Registrar Varios Empleados</a>
+                                <a class="btn btn-warning" type='button' data-toggle='modal' id='0' data-name=' a todos los empleados con el siguiente mensaje:' href='#modal_acciones'>
+                                    <i class="fa fa-send"></i> Enviar Usuarios y Contraseñas</a>
+                                    {% csrf_token %}
+                                    <button id="btn_descargar_lista" name="descargar_lista" class="btn btn-info" type="submit"><i class="fa fa-file-excel-o"></i> Descargar Lista de Empleados</button>
+                            </div>
+                            </form>
+                            <!-- DataTables init on table by adding .js-dataTable-full class, functionality initialized in js/pages/base_tables_datatables.js -->
+                            <table class="table table-bordered table-striped js-dataTable-full" id="tabla_empleados">
+                                <thead>
+                                    <tr>
+                                        <th class="hidden-xs text-center" style="width: 5%;"></th>
+                                        <th class="hidden-xs" style="width: 5%;">Nombre</th>
+                                        <th class="hidden-xs" style="width: 5%;">Apellido Paterno</th>
+                                        <th class="hidden-xs" style="width: 5%;">Apellido Materno</th>
+                                        <th class="hidden-xs" style="width: 10%;">Fecha de Nacimiento</th>
+                                        <th class="hidden-xs" style="width: 10%;">CURP</th>
+                                        <th class="hidden-xs" style="width: 10%;">RFC</th>
+                                        <th class="hidden-xs" style="width: 10%;">Dirección</th>
+                                        <th class="col-sm-1 text-center" style="width: 5%;">Numero de Empleado-Usuario</th>
+                                        <th class="col-sm-1 text-center" style="width: 5%;">Acciones</th>
+                                        <th class="col-sm-1 text-center" style="width: 5%;">Foto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    <!--END Page Content -->
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'empleado/js/empleado_datatable.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/fnReloadAjax.js' %}"></script>
+    <script>
+    $(document).on('ready',function(){
+        "use strict";
+        var idioma = {
+            sProcessing: "Procesando...",
+            sLengthMenu: "Mostrar _MENU_ registros",
+            sZeroRecords: "No se encontraron resultados",
+            sEmptyTable: "Ningún dato disponible en esta tabla",
+            sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+            sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+            sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+            sInfoPostFix: "",
+            sSearch: "Buscar:",
+            sUrl: "",
+            sInfoThousands: ",",
+            sLoadingRecords: "Cargando...",
+            oPaginate: {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            oAria: {
+                "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        };
+        var row_callback = function(nRow, aData, IdisplayIndex){
+            var $tr = $(nRow);
+            $tr.attr('id','tr'+aData.id);
+            var direccion = aData.empleado.direccion.completa, fdireccion = '', grupo = 'Empleado';
+            if (direccion.length>30)fdireccion = $.trim(direccion).substring(0, 30).split(" ").slice(0, -1).join(" ")+ "...";
+            else fdireccion=direccion;
+            var puntocontrol_instalacion="";
+            if (aData.puntocontrol!=null ){
+                if(aData.puntocontrol.length > 0) {
+                    puntocontrol_instalacion += ', Puntos de Control-Instalaciones: ';
+                    $.each(aData.puntocontrol, function (i, e) {
+                        if (i > 0)puntocontrol_instalacion += ', ';
+                        puntocontrol_instalacion += aData.puntocontrol[i].nombre + '-' + aData.puntocontrol[i].instalacion.nombre;
+                    });
+                }
+            }
+            $.each(aData.usuario.groups, function(i,e) {
+                if (aData.usuario.groups[i].name == 'administrador')
+                    grupo = 'Administrador';
+                else if (aData.usuario.groups[i].name == 'configurador')
+                    grupo = 'Configurador';
+                else if (aData.usuario.groups[i].name == 'recursos_humanos')
+                    grupo = 'Recursos Humanos';
+            });
+            var $td_acciones = $('<div>').attr('class','btn-group');
+            var $accion_editar = $('<a>').attr({
+                'href':"{% url 'empleado:empleado_editar' %}"+aData.id,
+                'class':'btn btn-xs btn-info',
+                'type':'button',
+                'data-toggle':'tooltip',
+                'title':'Editar Empleado'
+            }).append($('<i>').attr('class','fa fa-pencil')).tooltip({placement:'bottom'});
+            var eliminar = function() {
+                $("textarea#id_mensaje_email").remove();
+                var Eid = $(this).attr('id');
+                var name = $(this).data('name');
+                $('h3#modal_titulo_name').text('Eliminar Empleado');
+                $('input#modal_idEmpleado').val(Eid);
+                $('span#modal_name').text(name).css("visibility", 'visible');
+                $("button#btn_acciones").attr("disabled", false).css("visibility", 'visible').attr(
+                        'class','btn btn-sm btn-danger eliminar').text('Eliminar');
+                $("span#modal_mensaje_name").text('¿Esta seguro de eliminar el empleado');
+                $("button#modal_boton").text('Cancelar');
+            };
+            var $accion_borrar = $('<a>').attr({
+                'class':'btn btn-xs btn-danger',
+                'type':'button',
+                'data-toggle':'modal',
+                'title':'Eliminar Empleado',
+                'id':''+aData.id,
+                'data-name':' '+aData.empleado.nombre+' '+aData.empleado.apellido_paterno+' '+aData.empleado.apellido_materno+'?',
+                'href':'#modal_acciones'
+            }).append($('<i>').attr('class','fa  fa-trash')).data('id',aData.id).click(eliminar).tooltip({placement:'bottom'});
+            var restaurar = function() {
+                $("textarea#id_mensaje_email").remove();
+                var Eid = $(this).attr('id');
+                var name = $(this).data('name');
+                $('h3#modal_titulo_name').text('Restaurar Contraseña');
+                $('input#modal_idEmpleado').val(Eid);
+                $('span#modal_name').text(name).css("visibility", 'visible');
+                $("button#btn_acciones").attr("disabled", false).css("visibility", 'visible').attr(
+                        'class','btn btn-sm btn-default restaurar').text('Restaurar');
+                $("span#modal_mensaje_name").text('¿Esta seguro de restaurar la contraseña del empleado');
+                $("button#modal_boton").text('Cancelar');
+            };
+            var $accion_restaurar = $('<a>').attr({
+                'class':'btn btn-xs btn-default',
+                'type':'button',
+                'data-toggle':'modal',
+                'title':'Restaurar contraseña por defecto.',
+                'id':''+aData.id,
+                'data-name':' '+aData.empleado.nombre+' '+aData.empleado.apellido_paterno+' '+aData.empleado.apellido_materno+'?',
+                'href':'#modal_acciones'
+            }).append($('<i>').attr('class','si si-key')).data('id',aData.id).click(restaurar).tooltip({placement:'bottom'});
+            var informar = function() {
+                $("textarea#id_mensaje_email").remove();
+                $("div#div_acciones").append(
+                        $('<textarea>').attr({
+                            'id':'id_mensaje_email',
+                            "class":"col-md-4 form-control",
+                            "style":"width: 100%;"
+                        }).text('Su registro en el Control de Acceso ha sido un exito, ' +
+                                'a continuación le proveemos de su nombre de usuario y ' +
+                                'su contraseña inicial. Le sugerimos iniciar sesión y ' +
+                                'cambiarla por otra para mayor seguridad.')
+                );
+                var Eid = $(this).attr('id');
+                var name = $(this).data('name');
+                $('h3#modal_titulo_name').text('Enviar usuario y contraseña');
+                $('input#modal_idEmpleado').val(Eid);
+                $('span#modal_name').text(name).css("visibility", 'visible');
+                $("button#btn_acciones").attr("disabled", false).css("visibility", 'visible').attr(
+                        'class','btn btn-sm btn-warning informar').text('Informar');
+                $("span#modal_mensaje_name").text('Enviar usuario y contraseña');
+                $("button#modal_boton").text('Cancelar');
+            };
+            var $accion_informar = $('<a>').attr({
+                'class':'btn btn-xs btn-warning',
+                'type':'button',
+                'data-toggle':'modal',
+                'title':'Enviar usuario y contraseña.',
+                'id':''+aData.id,
+                'data-name':' al empleado '+aData.empleado.nombre+' '+aData.empleado.apellido_paterno+' '+aData.empleado.apellido_materno+' con el siguiente mensaje:',
+                'href':'#modal_acciones'
+            }).append($('<i>').attr('class','fa fa-send')).data('id',aData.id).click(informar).tooltip({placement:'bottom'});
+            if(aData.usuario.username != {{ request.user.username }}){
+                if(aData.password_default)$td_acciones.append($accion_informar);
+                else $td_acciones.append($accion_restaurar);
+                $td_acciones.append($accion_editar, $accion_borrar);
+            }
+            else
+                $td_acciones.append($accion_editar);
+            var $td_foto;
+            if(aData.foto == null){
+                $td_foto = $('<div>').attr('class','btn-group').append($('<a>').attr(
+                        {'class':'btn btn-xs btn-primary', 'type':'button', 'href':'{% url 'empleado:subir_foto_empleado' %}'+aData.id, 'title':'Subir Foto'}
+                ).append($('<i>').attr('class','fa fa-upload ')).tooltip({placement:'bottom'}));
+            }
+            else{
+                $td_foto = $('<div>').attr('class','btn-group').append($('<a>').attr(
+                        {'class':'btn btn-xs btn-info', 'type':'button', 'href':'{% url 'empleado:cambiar_foto_empleado' %}'+aData.id, 'title':'Cambiar Foto'}
+                ).append($('<i>').attr('class','fa fa-upload ')).tooltip({placement:'bottom'}),
+                        $('<a>').attr({'id':aData.id+'btnvfoto', 'class':'btn btn-xs btn-success', 'type':'button', 'title':'Ver Foto'}
+                ).append($('<i>').attr('class','fa fa-file-picture-o').popover(
+                        {trigger:'hover', content: '<img class="img-responsive" style="width: auto; width: auto;" src="'+aData.foto.foto+'">', html: true, placement: "left", container: 'body'})));
+            }
+            var hijos_tr = $tr.children();
+            $(hijos_tr[0]).attr({'class':'hidden-xs text-center', 'style':'width: 5%;'});
+            $(hijos_tr[1]).attr({'class':'hidden-xs', 'style':'width: 5%;'});
+            $(hijos_tr[2]).attr({'class':'hidden-xs', 'style':'width: 5%;'});
+            $(hijos_tr[3]).attr({'class':'hidden-xs', 'style':'width: 5%;'});
+            $(hijos_tr[4]).attr({'class':'hidden-xs', 'style':'width: 10%;'});
+            $(hijos_tr[5]).attr({'class':'hidden-xs', 'style':'width: 10%;'});
+            $(hijos_tr[6]).attr({'class':'hidden-xs', 'style':'width: 10%;'});
+            $(hijos_tr[7]).empty().attr({'style':'width: 5%;', 'class':'hidden-xs'}).text(fdireccion).popover(
+                    {trigger:'hover', title:'Dirección:', content: direccion, placement: 'top', container: 'body'});
+            var email = '';
+            if(aData.usuario.email.length > 0)
+                email = 'Correo electronico: '+aData.usuario.email+ ', ';
+            $(hijos_tr[8]).empty().attr({'class':'col-sm-1 text-center', 'style':'width: 5%;'}).text(aData.numero_empleado+" "+grupo).popover(
+                    {trigger:'hover', placement: 'top', container: 'body',
+                        content: email +
+                        'Hora de entrada: '+aData.hora_entrada.substring(0,5)+ ', Hora de salida: '+aData.hora_salida.substring(0,5)+
+                        puntocontrol_instalacion});
+            $(hijos_tr[9]).empty().append($td_acciones).attr({'class':'col-sm-1 text-center','style':'width: 5%;'});
+            $(hijos_tr[10]).empty().append($td_foto).attr({'class':'col-sm-1 text-center','style':'width: 5%;'})
+        };
+        var columns = [];
+        $.each(['usuario.username','empleado.nombre','empleado.apellido_paterno','empleado.apellido_materno', 'empleado.fecha_nacimiento',
+            'empleado.curp', 'empleado.rfc', 'empleado.direccion', 'numero_empleado', 'id', 'id'],function
+                (index,item){
+            columns.push({"mData": item});
+        });
+        var $tabla = $('table#tabla_empleados').DataTable({
+            order: [[ 8, "asc" ]],
+            sAjaxSource: "{% url 'empleado:datos_activos' %}",
+            bServerSide: true,
+            aoColumns: columns,
+            fnRowCallback:row_callback,
+            columnDefs: [ { orderable: false, targets: [ 7, 9, 10 ] } ],
+            pageLength: 10,
+            lengthMenu: [[5, 10, 15, 20], [5, 10, 15, 20]],
+            language: idioma
+        });
+        $("a#0").on('click',function () {
+            $("textarea#id_mensaje_email").remove();
+            $("div#div_acciones").append(
+                    $('<textarea>').attr({
+                        'id':'id_mensaje_email',
+                        "class":"col-md-4 form-control",
+                        "style":"width: 100%;"
+                    }).text('Su registro en el Control de Acceso ha sido un exito, ' +
+                                'a continuación le proveemos de su nombre de usuario y ' +
+                                'su contraseña inicial. Le sugerimos iniciar sesión y' +
+                                'cambiarla por otra para mayor seguridad.')
+            );
+            var Eid = $(this).attr('id');
+            var name = $(this).data('name');
+            $('h3#modal_titulo_name').text('Enviar usuario y contraseña');
+            $('input#modal_idEmpleado').val(Eid);
+            $('span#modal_name').text(name).css("visibility", 'visible');
+            $("button#btn_acciones").attr("disabled", false).css("visibility", 'visible').attr(
+                    'class','btn btn-sm btn-warning informar').text('Informar');
+            $("span#modal_mensaje_name").text('Enviar usuario y contraseña');
+            $("button#modal_boton").text('Cancelar');
+        });
+        $("button#btn_acciones").on('click',function(e){
+            App.blocks('div#block_empleado','state_loading');
+            $("button#btn_acciones").attr("disabled", 'true');
+            $("button#modal_boton").attr("disabled", 'true');
+            var clase = $("button#btn_acciones").attr('class');
+            var id_empleado = $("input#modal_idEmpleado").attr('value');
+            var url = "", icono="", titulo="", mensaje="", tipo="", metodoAjax="", mensaje_email="", datos = {}, borrar=true;
+            if(clase == "btn btn-sm btn-danger eliminar"){
+                    icono = 'fa fa-trash'; titulo = '<strong>¡ELIMINACIÓN CORRECTA!</strong><br>';
+                    mensaje = 'Se ha eliminado el empleado correctamente.'; tipo = 'danger';
+                    url = "{% url "empleado:empleado_eliminar" %}"; metodoAjax='DELETE';
+                    datos = {"id":id_empleado};
+            }
+            else if (clase == "btn btn-sm btn-default restaurar"){
+                icono = 'si si-key'; titulo = '<strong>¡RESTAURACIÓN DE CONTRASEÑA CORRECTA!</strong><br>';
+                mensaje = 'Se ha restaurado la contraseña del empleado correctamente.'; tipo = 'info';
+                url = "{% url "usuario:resetear_informar" %}"; metodoAjax='POST';
+                datos = {"id":id_empleado, "restaurar":true};
+            }
+            else if (clase == "btn btn-sm btn-warning informar"){
+                borrar=false;
+                if(id_empleado!=0 && id_empleado!='0'){
+                    titulo = '<strong>¡ENVIADO!</strong><br>';
+                    mensaje = 'Se ha enviado el usuario y la contraseña al empleado';
+                }
+                else{
+                    titulo = '<strong>¡ENVIADOS!</strong><br>';
+                    mensaje = 'Se han enviados los usuarios y contraseñas a todos los empleado';
+                }
+                mensaje_email = $("textarea#id_mensaje_email").val();
+                icono = 'fa fa-send'; tipo = 'warning';
+                url = "{% url "usuario:resetear_informar" %}"; metodoAjax='POST';
+                datos = {"id":id_empleado, "mensaje_email":mensaje_email, "informar":true};
+            }
+            $.ajax({url:url,
+                headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                data: datos,
+                type:metodoAjax,
+                dataType:'json'
+            }).done(function(data){
+                if(data.exito){
+                    if(borrar)$tabla.row("#tr"+id_empleado).remove().draw();
+                    $.notify({// options
+                        icon: icono,
+                        title: titulo,
+                        message: mensaje
+                    }, {// settings
+                        type: tipo,
+                        placement: {
+                            from: "top",
+                            align: "center"
+                        }
+                    });
+                }
+                else{
+                    $.notify({// options
+                        icon: 'fa fa-close',
+                        title: '<strong>¡ERROR!</strong><br>',
+                        message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                    }, {// settings
+                        type: 'danger',
+                        placement: {
+                            from: "top",
+                            align: "center"
+                        }
+                    });
+                }
+            }).fail(function () {
+                $.notify({// options
+                        icon: 'fa fa-close',
+                        title: '<strong>¡ERROR!</strong><br>',
+                        message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                    }, {// settings
+                        type: 'danger',
+                        placement: {
+                            from: "top",
+                            align: "center"
+                        }
+                    });
+            }).complete(function () {
+                $('div#modal_acciones').modal('hide');
+                $("button#modal_boton").removeAttr("disabled");
+                App.blocks('div#block_empleado','state_normal');
+            });
+        })
+    });
+    </script>
+{% endblock %}

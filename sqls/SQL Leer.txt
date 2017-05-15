@@ -1,0 +1,9 @@
+Se recomienda usar navicat o algun programa que pueda ejecutar los archivos sql sobre una base de datos de postgresql.
+Archivos de catalogos sqls necesarios para correr el servidor.
+Los mas pertinentes son los de auth_groups, comun_entidad, comun_municipio.
+El opcional comun_asentamiento (todos o unos cuantos).
+Se añadio un registro de super usuario staff en el mismo archivo de auth_group.
+De igual forma si no inserta los valores en auth_groups, el servidor lo hara por usted al no encontrar los grupos.
+Lo que no funcionaran seran los select de estado y municipio si no alimenta estas tablas con los datos en comun_catalogos.
+El archivo all_catalogos puede llenar todos los registro mencionados pero debe seleccionar cuantos asentamientos necesitara para evitar una sobrecarga.
+Los datos fueron sacados de la INEGI.

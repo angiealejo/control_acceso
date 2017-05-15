@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="">Cargar ARchivo cvs</label>
+    <input type="file" name="file">
+    <button type="submit">Guardar :P</button>
+</form>
+</body>
+</html>

@@ -1,0 +1,358 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/select2/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/select2/select2-bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/jquery-ui/jquery-ui.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/bootstrap-datepicker/bootstrap-datepicker3.min.css' %}">
+{% endblock %}
+{% block pageheader %}
+Instalacion
+{% endblock %}
+{% block subpageheader %}
+{% if request.get_full_path == "/instalacion/nuevo" %}
+Crear
+{% else %}
+Editar
+{% endif %}
+{% endblock %}
+ {% block breadcrumbs %}
+     <div class="col-sm-5 text-right hidden-xs" xmlns="http://www.w3.org/1999/html">
+                                <ol class="breadcrumb push-10-t">
+
+                                    <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+                                    <li><a class="link-effect" href="{% url 'instalacion:instalacion_list' %}">Instalación</a></li>
+                                    <li><a class="link-effect" href="">
+                                       {% if request.get_full_path == "/instalacion/nuevo" %}
+                                       Crear
+                                       {% else %}
+                                       Editar
+                                       {% endif %}
+                                    </a></li>
+
+                                </ol>
+                            </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <!--Modal Error-->
+        <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_error" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">Error</h3>
+                        </div>
+                        <div class="block-content">
+                            EL registro de instalación no existe.
+                        </div>
+                        <div class="modal-footer">
+                            <a href="{% url 'instalacion:instalacion_list' %}" class="btn btn-sm btn-info" type="button">Aceptar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Error-->
+<div class="content">
+    <form id="form_instalacion" class="js-validation-material form-horizontal push-10-t" method="POST">
+    {% csrf_token %}
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="block block-rounded">
+                    <div class="block-header bg-primary">
+                        <h3 class="block-title">Instalaciones</h3>
+                    </div>
+                    <div class="block-content">
+                        <div class="row">
+                         <div class="col-md-5 col-md-offset-1">
+                             <div class="form-group">
+                                 <div class="col-sm-9">
+                                     <div class="form-material form-material-primary">
+                                         {{ form.nombre }}
+                                         <label for="{{ form.nombre.name }}">{{ form.nombre.label }}</label>
+                                     </div>
+                                   </div>
+                               </div>
+                          </div>
+                     </div>
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-1">
+                               <div class="form-group">
+                                   <div class="col-sm-9">
+                                       <div class="form-material form-material-primary">
+                                           {{ form2.pais }}
+                                           <label for="{{ form2.pais.name }}">{{ form2.pais.label }}</label>
+                                       </div>
+                                   </div>
+                               </div>
+                          </div>
+                            <div class="col-md-5 col-md-offset-1">
+                             <div class="form-group">
+                                 <div class="col-sm-9">
+                                     <div class="form-material form-material-primary">
+                                        {{ form2.estado }}
+                                        <label for="{{ form2.estado.name }}">{{ form2.estado.label }}</label>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.municipio }}
+                                            <label for="{{ form2.municipio.name }}">{{ form2.municipio.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.ciudad }}
+                                            <label for="{{ form2.ciudad.name }}">{{ form2.ciudad.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.asentamiento }}
+                                            <label for="{{ form2.asentamiento.name }}">{{ form2.asentamiento.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.calle }}
+                                            <label for="{{ form2.calle.name }}">{{ form2.calle.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.numero_exterior }}
+                                            <label for="{{ form2.numero_exterior.name }}">{{ form2.numero_exterior.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.numero_interior }}
+                                            <label for="{{ form2.numero_interior.name }}">{{ form2.numero_interior.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.codigo_postal }}
+                                            <label for="{{ form2.codigo_postal.name }}">{{ form2.codigo_postal.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-md-offset-1">
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div class="form-material form-material-primary">
+                                            {{ form2.datos_adicionales }}
+                                            <label for="{{ form2.datos_adicionales.name }}">{{ form2.datos_adicionales.label }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-5">
+                                <div class="form-group">
+                                     <div class="col-sm-9">
+                                         <input type="submit" value="Guardar" class="btn btn-primary guardar" disabled="true">
+                                         <a href="{% url 'instalacion:instalacion_list' %}" class="btn btn-danger" >Cancelar</a>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/plugins/select2/select2.full.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/select2/select2_locale_es.js' %}"></script>
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/messages_es.min.js' %}"></script>
+    <script src="{% static 'instalacion/js/instalacion_form_validation.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            "use strict";
+            var flag = false;
+            var cabeceras;
+            $("input#id_pais").prop('readonly', true);
+            function cargarEstados(estado,municipio)
+            {   $("select#id_estado").empty().append($('<option>').text(''));
+                $.ajax({url: "{% url 'comun:asentamientos_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{consulta:'estado'},
+                        dataType:"json",
+                        type:"GET"
+                }).done(function(data){
+                    $.each(data, function(index, item) {
+                        $("select#id_estado").append($('<option>').attr('value',item.entidad).text(item.entidad));
+                    });
+                    if(estado) {
+                        $("select#id_estado").val(estado).change();
+                        cargarMunicipios(municipio);
+                    }
+                })
+            }
+            function cargarMunicipios(municipio)
+            {   $("select#id_municipio").empty().append($('<option>').text(''));
+                var estado = $('select#id_estado').val();
+                var id = 0;
+                cabeceras = [];
+                $.ajax({url: "{% url 'comun:asentamientos_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{consulta:'municipio',estado:estado},
+                        dataType:"json",
+                        type:"GET"
+                }).done(function(data){
+                    $.each(data, function(index, item) {
+                        $("select#id_municipio").append($('<option>').attr({'value':item.municipio,'id':id}).text(item.municipio));
+                        cabeceras[id]=item.municipio;
+                        id++;
+                    });
+                    if(municipio) {
+                        $("select#id_municipio").val(municipio).change();
+                        $("input.guardar").removeAttr("disabled");
+                        flag = true;
+                    }
+                });
+            }
+            function cargarAsentamientos()
+            {   var asentamientos = [];
+                var estado = $('select#id_estado').val();
+                var municipio = $('select#id_municipio').val();
+                $.ajax({url: "{% url 'comun:asentamientos_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{consulta:'asentamiento',estado:estado,municipio:municipio},
+                        dataType:"json",
+                        type:"GET"
+                }).done(function(data){
+                    $.each(data, function(index, item) {
+                        asentamientos.push(item.asentamiento);
+                        //$("datalist#dl_asentamiento").append($('<option>').attr('value',item.asentamiento).text(item.asentamiento));
+                    });
+                    $( "input#id_asentamiento").autocomplete({
+                        source: asentamientos
+                    });
+                });
+            }
+            function cargarCodigoPostal()
+            {   var estado = $('select#id_estado').val();
+                var municipio = $('select#id_municipio').val();
+                var asentamiento = $('input#id_asentamiento').val();
+                $.ajax({url: "{% url 'comun:asentamientos_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{consulta:'codigopostal',estado:estado,municipio:municipio,asentamiento:asentamiento},
+                        dataType:"json",
+                        type:"GET"
+                }).done(function(data){
+                    $.each(data, function(index, item) {
+                        $("input#id_codigo_postal").val(item.codigopostal);
+                    })
+                });
+            }
+            $("select#id_estado").select2({language: "es"}).on('change',function(e) {
+                if(flag)cargarMunicipios(null);
+            });
+            $("select#id_municipio").select2({language: "es"}).on('change',function(e) {
+                if(flag){
+                    var id_cabecera = $("select#id_municipio").children(":selected").attr("id");
+                    var cabecera = [cabeceras[id_cabecera]];
+                    $("input#id_ciudad").autocomplete({
+                        source: cabecera
+                    });
+                    cargarAsentamientos(null);
+                }
+            });
+            $("input#id_asentamiento").on('change',function(e) {
+                if(flag)cargarCodigoPostal();
+            });
+            function cargar()
+            {   var id = {{ id }};
+                if (id==0)
+                {
+                    cargarEstados();
+                    flag = true;
+                    $("input.guardar").removeAttr("disabled");
+                }
+                else
+                {
+                    $.ajax({url: "{% url 'instalacion:instalacion_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{instalacion:id},
+                        dataType:"json",
+                        type:"GET"
+                    }).done(function(data) {
+                        if(data.activo == 1){
+                            $("input#id_nombre").attr('value', '' + data.nombre);
+                            $("input#id_pais").attr('value', '' + data.direccion.pais);
+                            $("input#id_calle").attr('value', '' + data.direccion.calle);
+                            $("input#id_numero_exterior").attr('value', '' + data.direccion.numero_exterior);
+                            $("input#id_numero_interior").attr('value', '' + data.direccion.numero_interior);
+                            $("textarea#id_datos_adicionales").val(data.direccion.datos_adicionales);
+                            $("input#id_ciudad").val(data.direccion.ciudad);
+                            $("input#id_asentamiento").val(data.direccion.asentamiento);
+                            $("input#id_codigo_postal").val(data.direccion.codigo_postal);
+
+                            var estado = data.direccion.estado;
+                            var municipio = data.direccion.municipio;
+
+                            cargarEstados(estado,municipio);
+                        }
+                        else
+                        {   $('form#form_instalacion').remove();
+                            $('div#modal_error').modal('show');
+                        }
+                    }).fail(function(){
+                        $('form#form_instalacion').remove();
+                        $('div#modal_error').modal('show');
+                    })
+                }
+            }
+            cargar();
+            $("form#form_instalacion").submit(function(event){
+                $("input.guardar").attr("disabled", true);
+            });
+        });
+    </script>
+{% endblock %}

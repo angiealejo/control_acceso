@@ -1,0 +1,285 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.css' %}">
+{% endblock %}
+{% block pageheader %}
+    Puntos de Control
+{% endblock %}
+{% block subpageheader %}
+    Listar
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="col-sm-5 text-right hidden-xs">
+        <ol class="breadcrumb push-10-t">
+            <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+            <li><a class="link-effect" href="">Puntos de Control</a></li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+       <!--Modal Eliminar-->
+    <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_eliminar" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-top">
+            <div class="modal-content">
+                <div id="block_pcaccion" class="block block-themed block-transparent remove-margin-b">
+                    <div class="block-header bg-primary-dark">
+                        <h3 id="titulo_modal" class="block-title"></h3>
+                    </div>
+                    <div class="block-content">
+                        <span id="modal_mensaje_name"></span><span id="modal_name"></span>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="hidden" id="modal_idPuntoControl" name="puntocontrol_id">
+                        <button id="btn-eliminar" class="" type="button"></button>
+                        <button id="modal_boton" class="btn btn-sm btn-primary" type="button" data-dismiss="modal" aria-hidden="true"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Fin Modal Eliminar-->
+
+    <!-- Inicia Contenido -->
+    <div class="block-content">
+        <div class="row">
+            <div class="col-sm-2">
+                <a href="{% url 'punto_control:punto_control_nuevo' %}" class="btn btn-primary"><i class="fa fa-plus-circle"></i> Crear Punto de Control</a>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-striped js-dataTable-full" id="tabla_punto_control">
+            <thead>
+            <tr>
+                <th class="text-center"></th>
+                <th>Nombre</th>
+                <th class="hidden-xs" >Instalación</th>
+                <th class="hidden-xs">Estado</th>
+                <th class="hidden-xs">Ip. Pública</th>
+                <th class="hidden-xs">Ip. Privada</th>
+                <th class="hidden-xs" style="width: 15%;">Puerto Público</th>
+                <th class="hidden-xs" style="width: 15%;">Puerto Privado</th>
+                <th id="tabla_acciones" class="text-center" style="width: 10%;">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <!-- Termina Contenido -->
+{% endblock %}
+
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'punto_control/js/punto_control_datatable.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/fnReloadAjax.js' %}"></script>
+
+    <script>
+    $(document).on('ready',function(){
+        "use strict";
+        var idioma = {
+            sProcessing: "Procesando...",
+            sLengthMenu: "Mostrar _MENU_ registros",
+            sZeroRecords: "No se encontraron resultados",
+            sEmptyTable: "Ningún dato disponible en esta tabla",
+            sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+            sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+            sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+            sInfoPostFix: "",
+            sSearch: "Buscar:",
+            sUrl: "",
+            sInfoThousands: ",",
+            sLoadingRecords: "Cargando...",
+            oPaginate: {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            oAria: {
+                "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        };
+        var row_callback = function(nRow, aData, IdisplayIndex){
+            var $tr = $(nRow);
+            $tr.attr('id','tr'+aData.id);
+            var lb_accion = "Liberar", clase_btn_eliminar = "btn btn-sm btn-success liberar",
+                    mensaje_modal = 'Al liberar un punto de control, este deja de sincronizar al cliente que lo posee, ' +
+                            'el solicitara una reconfiguración, de igual forma el cliente tambien puede liberar el punto de control. ' +
+                            'Pero si libero el punto de control del cliente sin tener conexión con el servidor' +
+                            ' o el equipo quedo inhabilitado, se debe liberar el punto manualmente con esta opción. ' +
+                            ' De igual forma puede liberar un punto de control bloqueado por la opción bloquear. ' +
+                            '¿Esta seguro de liberar el punto de control',
+                    clase = 'btn btn-xs btn-success', icono = 'fa fa-unlock';
+            if (aData.asignado == 0){
+                lb_accion = "Bloquear"; clase_btn_eliminar = "btn btn-sm btn-warning bloquear";
+                mensaje_modal = 'Al bloquear un punto de control este no se podra usar en los clientes al configurarlos. ' +
+                        'Para poder revertir esta acción y poder usar este punto de control use la opción liberar. ' +
+                        '¿Esta seguro de bloquear el punto de control';
+                clase = 'btn btn-xs btn-warning'; icono = 'fa fa-lock';
+            }
+            var liberar_bloquear = function() {
+                                var PuntoControlId = $(this).attr('id');
+                                var name = $(this).data('name');
+                                $('h3#titulo_modal').text(lb_accion + ' Punto de Control');
+                                $('input#modal_idPuntoControl').val(PuntoControlId);
+                                $('span#modal_name').text(name).css("visibility", 'visible');
+                                $("button#btn-eliminar").attr({"disabled": false, "class": clase_btn_eliminar}).css("visibility", 'visible').text(lb_accion);
+                                $("span#modal_mensaje_name").text(mensaje_modal);
+                                $("button#modal_boton").text('Cancelar');
+                            };
+            var $a_liberar_bloquear = $('<a>').attr({
+                                'class': clase,
+                                'type':'button',
+                                'data-toggle':'modal',
+                                'title': lb_accion + ' punto de control',
+                                'id':''+aData.id,
+                                'data-name':' '+aData.nombre+'?',
+                                'href':'#modal_eliminar'
+                            }).append($('<i>').attr('class',icono)).data('id',aData.id).tooltip({placement:'bottom'}).click(liberar_bloquear);
+            var eliminar = function() {
+                                var PuntoControlId = $(this).attr('id');
+                                var name = $(this).data('name');
+                                $('h3#titulo_modal').text("Eliminar Punto de Control");
+                                $('input#modal_idPuntoControl').val(PuntoControlId);
+                                $('span#modal_name').text(name).css("visibility", 'visible');
+                                $("button#btn-eliminar").attr({"disabled": false, "class": "btn btn-sm btn-danger eliminar"}).css("visibility", 'visible').text("Eliminar");
+                                $("span#modal_mensaje_name").text('¿Esta seguro de eliminar el punto de control');
+                                $("button#modal_boton").text('Cancelar');
+                            };
+            var $a_eliminar = $('<a>').attr({
+                                'class':'btn btn-xs btn-danger',
+                                'type':'button',
+                                'data-toggle':'modal',
+                                'title':'Eliminar punto de control',
+                                'id':''+aData.id,
+                                'data-name':' '+aData.nombre+'?',
+                                'href':'#modal_eliminar'
+                            }).append($('<i>').attr('class','fa  fa-trash')).data('id',aData.id).tooltip({placement:'bottom'}).click(eliminar);
+            var $td_acciones = $('<div>').attr('class','btn-group').append(
+                            $('<a>').attr({
+                                'href':"{% url 'punto_control:punto_control_editar' %}"+aData.id,
+                                'class':'btn btn-xs btn-info',
+                                'type':'button',
+                                'data-toggle':'tooltip',
+                                'title':'Editar punto de control'
+                            }).append($('<i>').attr('class','fa fa-pencil')).tooltip({placement:'bottom'})
+            );
+            $td_acciones.append($a_liberar_bloquear,$a_eliminar);
+            var estado = " Asignado / Bloqueado", icono_estado = "fa fa-lock", clase_estado = "label label-success";
+            if (aData.asignado == 0){
+                estado = " No Asignado"; icono_estado = "fa fa-unlock"; clase_estado = "label label-warning"
+            }
+            var hijos_tr = $tr.children();
+            $(hijos_tr[0]).attr({'class':'text-center'});
+            $(hijos_tr[2]).attr({'class':'hidden-xs'});
+            $(hijos_tr[3]).attr({'class':'hidden-xs'}).empty().append(
+                    $('<span>').attr({'class':clase_estado}).append(
+                            $('<i>').attr('class',icono_estado),$('<span>').text(estado))
+            );
+            $(hijos_tr[4]).attr({'class':'hidden-xs'});
+            $(hijos_tr[5]).attr({'class':'hidden-xs'});
+            $(hijos_tr[6]).attr({'class':'hidden-xs', 'style':'width: 15%;'});
+            $(hijos_tr[7]).attr({'class':'hidden-xs', 'style':'width: 15%;' });
+            $(hijos_tr[8]).empty().append($td_acciones).attr({'class':'text-center','style':'width: 10%;'});
+        };
+        var columns = [];
+        $.each(['id','nombre', 'instalacion.nombre', 'asignado', 'ip_publica', 'ip_privada',
+            'puerto_publico', 'puerto_privado', 'id'],function(index,item){
+            columns.push({"mData": item});
+        });
+        var $tabla = $('table#tabla_punto_control').DataTable({
+            sAjaxSource: "{% url 'punto_control:puntos_control_activos' %}",
+            bServerSide: true,
+            aoColumns: columns,
+            fnRowCallback:row_callback,
+            columnDefs: [{ orderable:false, targets: [ 8 ] } ],
+            pageLength: 10,
+            lengthMenu: [[5, 10, 15, 20], [5, 10, 15, 20]],
+            language: idioma
+        });
+        $("button#btn-eliminar").on('click',function(e){
+                App.blocks('div#block_pcaccion','state_loading');
+                $("button#modal_boton").attr("disabled", 'true');
+                $("button#btn-eliminar").attr("disabled", 'true');
+                var clase = $("button#btn-eliminar").attr('class');
+                var url = "", icono="", titulo="", mensaje="", tipo="";
+                if(clase == "btn btn-sm btn-danger eliminar"){
+                    icono = 'fa fa-trash'; titulo = '<strong>¡ELIMINACIÓN CORRECTA!</strong><br>';
+                    mensaje = 'Se ha eliminado el punto de control correctamente.'; tipo = 'danger';
+                    url = "{% url "punto_control:punto_control_eliminar" %}";
+                }
+                else if(clase == "btn btn-sm btn-success liberar"){
+                    icono = 'fa fa-unlock'; titulo = '<strong>¡LIBERACIÓN CORRECTA!</strong><br>';
+                    mensaje = 'Se ha liberado el punto de control correctamente.'; tipo = 'success';
+                    url = "{% url "punto_control:punto_control_liberar" %}";
+                }
+                else if(clase == "btn btn-sm btn-warning bloquear"){
+                    icono = 'fa fa-lock'; titulo = '<strong>¡BLOQUEO CORRECTO!</strong><br>';
+                    mensaje = 'Se ha bloqueado el punto de control correctamente.'; tipo = 'warning';
+                    url = "{% url "punto_control:punto_control_bloquear" %}";
+                }
+                var id_punto_control = $("input#modal_idPuntoControl").attr('value');
+                $.ajax({
+                    url:url,
+                    headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                    data: {"id":id_punto_control},
+                    type:'DELETE',
+                    dataType:'json'
+                }).done(function(data){
+                    if(data.exito){
+                        $tabla.row("#tr"+id_punto_control).remove().draw();
+                        $.notify({// options
+                                    icon: icono,
+                                    title: titulo,
+                                    message: mensaje
+                                }, {// settings
+                                    type: tipo,
+                                    placement: {
+                                        from: "top",
+                                        align: "center"
+                                    }
+                                });
+                    }
+                    else{
+                    $.notify({// options
+                        icon: 'fa fa-close',
+                        title: '<strong>¡Error!</strong><br>',
+                        message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                    }, {// settings
+                        type: 'danger',
+                        placement: {
+                            from: "top",
+                            align: "center"
+                        }
+                    });
+                }
+            }).fail(function () {
+                $.notify({// options
+                        icon: 'fa fa-close',
+                        title: '<strong>¡ERROR!</strong><br>',
+                        message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                    }, {// settings
+                        type: 'danger',
+                        placement: {
+                            from: "top",
+                            align: "center"
+                        }
+                    });
+            }).complete(function () {
+                $('div#modal_eliminar').modal('hide');
+                $("button#modal_boton").removeAttr("disabled");
+                App.blocks('div#block_pcaccion','state_normal');
+            });
+        });
+    });
+    </script>
+
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/bootstrap-fileinput/fileinput.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/select2/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/select2/select2-bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/jquery-ui/jquery-ui.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/bootstrap-datepicker/bootstrap-datepicker3.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/bootstrap-timepicker/bootstrap-timepicker.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/select2/select2tags.css' %}">
+{% endblock %}
+{% block pageheader %}
+Registrar Nuevos
+{% endblock %}
+{% block subpageheader %}
+
+{% endblock %}
+ {% block breadcrumbs %}
+     <div class="col-sm-5 text-right hidden-xs" xmlns="http://www.w3.org/1999/html">
+                                <ol class="breadcrumb push-10-t">
+                                    <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+                                    <li><a class="link-effect" href="{% url 'empleado:empleado_list' %}">Empleado</a></li>
+                                    <li><a class="link-effect" href="">Registrar Nuevos</a></li>
+
+                                </ol>
+                            </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <!--Modal Importar-->
+        <div style="display: none; margin-top: 10px;" class="modal fade" id="modal_importar" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">Registrar</h3>
+                        </div>
+                        <div id="mensaje_importar" class="block-content">
+                            Registrando empleados, por favor espere, no salga de esta pagina, gracias por su pacencia...
+                        </div>
+                        <div class="modal-footer">
+                            <a id="botton_aceptar" class="btn btn-sm btn-primary" type="button">Aceptar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Importar-->
+    <!--Modal Instrucciones-->
+        <div style="display: none; margin-top: 30px;" class="modal fade" id="modal_instrucciones" tabindex="-1" role="dialog" aria-hidden="tre">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">Instrucciones</h3>
+                        </div>
+                                    <div class="block-content">
+                                            <span>Debe de subir un archivo excel (.xlsx) que contenga el formato de campos requeridos en
+                                                el formulario de empleado, aquí le dejamos un ejemplo:
+                                                <a href="{% static 'empleado/Empleados.xlsx' %}" type="button" class="btn btn-xs btn-success push-5-r push-10"><i class="fa fa-file-excel-o"></i> Descargar archivo de ejemplo</a>
+                                                </span><br>
+                                                <span style="color: red;">Los campos obligatorios * son: Número de Empleado, Nombre, Apellido Paterno, Correo Electronico,
+                                                    Hora de Entrada, Hora de Salida.
+                                                </span><br>
+                                                <span style="color: gree;">El resto de los campos se puede asignar o dejar en blanco.
+                                                </span><br>
+                                                <span>Los puntos de control se deben asignar en el formulario para que estos sean asignados a los empleados que se estan registrando,
+                                                    de igual forma si el empleado ya esta registrado se actualizara toda su información.
+                                                </span>
+                                            </span>
+                                    </div>
+                        <div class="modal-footer">
+                            <button id="modal_boton" class="btn btn-sm btn-success" type="button" data-dismiss="modal" aria-hidden="true">Aceptar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Instrucciones-->
+<div class="content">
+    <form id="form_importar_excel" class="js-validation-material form-horizontal push-10-t">
+    {% csrf_token %}
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="block block-rounded">
+                    <div class="block-header bg-primary">
+                        <h3 class="block-title">Registrar Nuevos</h3>
+                    </div>
+                    <div class="block-content">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-10 col-md-offset-1">
+                                    <div class="form-group">
+                                        <div class="col-sm-4">
+                                            <div class="form-material form-material-primary">
+                                                {{ form.puntocontrol }}
+                                                <label for="{{ form.puntocontrol.name }}">{{ form.puntocontrol.label }}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-10 col-md-offset-1">
+                                    <div class="form-group">
+                                        <div class="col-sm-12">
+                                            <div class="form-material form-material-primary">
+                                                {{ form.archivo }}
+                                                <label for="{{ form.archivo.name }}">{{ form.archivo.label }}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="text-center">
+                                <div class="form-group">
+                                     <div class="text-center">
+                                         <a id="id_instrucciones" name="instrucciones" class="btn btn-success">Instrucciones</a>
+                                         <input id="id_importar" name="importar" type="submit" value="Importar" class="btn btn-primary guardar">
+                                         <a href="{% url 'empleado:empleado_list' %}" class="btn btn-default">Regresar</a>
+                                     </div>
+                                </div>
+                            </div>
+                            <div id="div_tabla_resultados_imprimir">
+                            </div>
+                            <div class="col-md-8 col-md-offset-2 text-center" id="div_tabla_resultados_boton">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/plugins/jquery-form/jquery.form.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-fileinput/fileinput.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-fileinput/fileinput_locale_es.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/select2/select2.full.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/select2/select2_locale_es.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/messages_es.min.js' %}"></script>
+    <script src="{% static 'empleado/js/importar_empleado_form_validation.js' %}"></script>
+    <script>
+        $(function () {
+            // Init page helpers (BS Datepicker + BS Colorpicker + Select2 + Masked Input + Tags Inputs plugins)
+            App.initHelpers(['datepicker']);
+        });
+    </script>
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            "use strict";
+            $("input#id_archivo").fileinput({
+                language: 'es',
+                showCancel: false,
+                showUpload: false,
+                showClose: false,
+                allowedFileExtensions : ['xlsx'],
+                maxFileSize: 2000,
+                dropZoneEnabled: true
+            });
+            function cargarPuntosControl(){
+                $("select#id_puntocontrol").empty().select2({language: "es"});
+                $.ajax({url: "{% url 'punto_control:punto_control_api' %}",
+                    headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                    data:{lista:'puntocontrol',activo:1},
+                    dataType:"json",
+                    type:"GET"
+                }).done(function(data) {
+                    $.each(data, function (index, item) {
+                        $("select#id_puntocontrol").append($('<option>').val(item.id).text(item.nombre+' - '+item.instalacion.nombre));
+                    });
+                });
+            }
+            cargarPuntosControl();
+            $("span.select2").attr("style","width: 250px;");
+            var $modal_instrucciones = $('div#modal_instrucciones');
+            $("a#id_instrucciones").click(function(e) {
+                if($modal_instrucciones.css('display') == 'none'){
+                    $modal_instrucciones.modal('show')
+                }
+            });
+            $("form#form_importar_excel").submit(function(event){
+                event.preventDefault();
+            });
+            $("input#id_importar").removeAttr('disabled').click(function () {
+                var $archivo = $("input#id_archivo").val(), $puntos_control = $("select#id_puntocontrol").val(),
+                        $div_tabla_resultados = $('div#div_tabla_resultados_imprimir'), $div_boton = $('div#div_tabla_resultados_boton');
+                if($archivo != null && $archivo != '' && $puntos_control != null && $puntos_control != ''){
+                    $("input#id_importar").prop('disabled',true);
+                    $div_boton.empty();
+                    $div_tabla_resultados.empty().append(
+                            $('<strong>').append($('<p>').attr("class","text-center").text("Registrando empleados, por favor espere, no salga de esta pagina, gracias por su pacencia..."))
+                    );
+                    var $form = $("form#form_importar_excel");
+                    var data = new FormData($form[0]);
+                    $.ajax({
+                            url: "{% url 'empleado:importar_excel' %}",
+                            type: "POST",
+                            data: data,
+                            cache: false,
+                            contentType: false,
+                            processData: false,
+                            success: function(data)
+                            {
+                                var $boton_aceptar = $('a#botton_aceptar'), $div_tabla_resultados = $('div#div_tabla_resultados_imprimir'),
+                                $div_boton = $('div#div_tabla_resultados_boton'),
+                                $table = $('<table>').attr({'id':'id_tabla_resultados','class':"table table-bordered"}),
+                                $thead = $('<thead>').append($('<tr>').append(
+                                        $('<th>').text("Numero de Empleado"),
+                                        $('<th>').text("Nombre"),
+                                        $('<th>').text("Apellido Paterno"),
+                                        $('<th>').text("Apellido Materno"),
+                                        $('<th>').text("Correo Electronico"),
+                                        $('<th>').text("Hora de Entrada"),
+                                        $('<th>').text("Hora de Salida")
+                                )),
+                                $tbody = $('<tbody>'),
+                                $imprimir = $('<button>').attr("class","btn btn-info push-5-r push-10 imprimir").append($('<i>').attr("class","fa fa-print"), $('<span>').text(' Imprimir')).click(imprimir);
+                                $boton_aceptar.removeAttr('data-dismiss').removeAttr('aria-hidden').attr('href', '{% url 'empleado:empleado_list' %}');
+                                if (data.Exito) {
+                                    $tbody.append(data.Resultados);
+                                    $table.append($thead, $tbody);
+                                    $div_tabla_resultados.empty().append(
+                                            $('<strong>').append($('<p>').attr("class","text-center").text("RESULTADOS")),
+                                            $table
+                                    );
+                                    $div_boton.empty().append($imprimir);
+                                    $.each(data.Errores, function (i) {
+                                        var $tr = $("tr#"+data.Errores[i].id); var $hijos_tr = $tr.children(); var $hijo_tr = $($hijos_tr[0]);
+                                        var clase = $tr.attr('class'), titulo = '', contenido = '', $td = $hijo_tr.html();
+                                        if(clase == 'danger'){
+                                            titulo = 'Errores:';
+                                            contenido = '<span style="color: red;">' + data.Errores[i].error + '</span>';
+                                        }
+                                        else {
+                                            if(clase == 'success') {
+                                                titulo = 'Guardado';
+                                                contenido = '<span style="color: green;">Exitoso.</span>';
+                                            }
+                                            else if(clase == 'info') {
+                                                titulo = 'Modificado';
+                                                contenido = '<span style="color: blue;">Exitoso.</span>';
+                                            }
+                                            if(data.Errores[i].error.length > 0){
+                                                titulo += ' excepto los campos:';
+                                                contenido = '<span style="color: red;">' + data.Errores[i].error + '</span>';
+                                            }
+                                            else
+                                                titulo += ':';
+                                        }
+                                        $hijo_tr.empty().append($('<div>').popover({trigger:'hover', title:titulo, content: contenido, html: true, placement: 'top', container: 'body'}).append($td));
+                                    });
+                                }
+                                else {
+                                    $div_tabla_resultados.empty().append(data.Error);
+                                }
+                                $("input#id_importar").removeAttr('disabled');
+                            }
+                    });
+                }
+            });
+            function imprimir() {
+                var ficha=document.getElementById('div_tabla_resultados_imprimir');
+                var ventimp=window.open(' ','popimpr');
+                var css = ventimp.document.createElement("link");
+                css.setAttribute("href", "{% static 'assets/css/print.css' %}");
+                css.setAttribute("rel", "stylesheet");
+                css.setAttribute("type", "text/css");
+                css.setAttribute("media", "print");
+                ventimp.document.write(ficha.outerHTML);
+                ventimp.document.close();
+                ventimp.document.head.appendChild(css);
+                ventimp.print();
+                ventimp.close();
+            }
+        });
+    </script>
+{% endblock %}

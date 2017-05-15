@@ -1,0 +1,13 @@
+.idea/
+.idea/*
+*.pyc
+log/
+log/*
+media/
+media/*
+control_accesos_v2_server/settings.py
+control_accesos_v2_server/wsgi.py
+*.sqlite3
+*.sqlite2
+*.sqlite
+*.db

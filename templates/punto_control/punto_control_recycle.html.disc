@@ -1,0 +1,165 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.css' %}">
+{% endblock %}
+{% block pageheader %}
+    Puntos de Control
+{% endblock %}
+{% block subpageheader %}
+    Reciclaje
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="col-sm-5 text-right hidden-xs">
+        <ol class="breadcrumb push-10-t">
+            <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+            <li><a class="link-effect" href="{% url 'punto_control:punto_control_list' %}">Puntos de Control</a></li>
+            <li><a class="link-effect" href="">Reciclaje</a></li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+       <!--Modal Restaurar-->
+    <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_restaurar" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-top">
+            <div class="modal-content">
+                <div class="block block-themed block-transparent remove-margin-b">
+                    <div class="block-header bg-primary-dark">
+                        <h3 class="block-title">Restaurar Punto de Control</h3>
+                    </div>
+                    <div class="block-content">
+                        <span id="modal_mensaje_name"></span><span id="modal_name"></span>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="hidden" id="modal_idPuntoControl" name="puntocontrol_id">
+                        <button class="btn btn-sm btn-warning restaurar" type="button">Restaurar</button>
+                        <button id="modal_boton" class="btn btn-sm btn-primary" type="button" data-dismiss="modal" aria-hidden="true"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Fin Modal Restaurar-->
+
+    <!-- Inicia Contenido -->
+    <div class="block-content">
+        <table class="table table-bordered table-striped js-dataTable-full" id="tabla_punto_control">
+            <thead>
+            <tr>
+                <th class="text-center"></th>
+                <th>Nombre</th>
+                <th class="hidden-xs" >Instalación</th>
+                <th class="hidden-xs">Ip. Pública</th>
+                <th class="hidden-xs">Ip. Privada</th>
+                <th class="hidden-xs" style="width: 15%;">Puerto Público</th>
+                <th class="hidden-xs" style="width: 15%;">Puerto Privado</th>
+                <th id="tabla_acciones" class="text-center" style="width: 10%;">Restaurar</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <!-- Termina Contenido -->
+{% endblock %}
+
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'punto_control/js/punto_control_datatable.js' %}"></script>
+    <script>
+    $(document).on('ready',function(){
+        "use strict";
+        $.ajax({url: "{% url 'punto_control:punto_control_api' %}",
+            headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+            data:{lista:'puntocontrol',activo:0},
+            dataType:"json",
+            type:"GET"
+        }).done(function(data) {
+            var $tabla = $('#tabla_punto_control').DataTable();
+            $.each(data, function (index, item) {
+                var $tr = $('<tr>').attr('id','tr'+item.id).append(
+                        $('<td>').text(item.id),
+                        $('<td>').text(item.nombre),
+                        $('<td>').attr({'class':'hidden-xs'
+                                        }).text(item.instalacion.nombre),
+                        $('<td>').attr({'class':'hidden-xs'
+                                        }).text(item.ip_publica),
+                        $('<td>').attr({'class':'hidden-xs'
+                                        }).text(item.ip_privada),
+                        $('<td>').attr({'class':'hidden-xs',
+                                        'style':'width: 15%'
+                                        }).text(item.puerto_publico),
+                        $('<td>').attr({'class':'hidden-xs',
+                                        'style':'width: 15%'
+                                        }).text(item.puerto_privado),
+                        $('<td>').attr('class','text-center').append(
+                                $('<div>').attr('class','btn-group').append(
+
+                                    $('<a>').attr(
+                                            {   'class':'btn btn-xs btn-warning',
+                                                'type':'button',
+                                                'data-toggle':'modal',
+                                                'title':'Restaurar Instalacion',
+                                                'id':''+item.id,
+                                                'data-name':' '+item.nombre+'?',
+                                                'href':'#modal_restaurar'
+                                            }
+                                    ).append(
+                                            $('<i>').attr('class','fa fa-recycle')).data('id',item.id).click(function() {
+                                        var PuntoId = $(this).attr('id');
+                                        var name = $(this).data('name');
+                                        $('input#modal_idPuntoControl').val(PuntoId);
+                                        $('span#modal_name').text(name).css("visibility", 'visible');
+                                        $("button.restaurar").attr("disabled", false).css("visibility", 'visible');
+                                        $("span#modal_mensaje_name").text('¿Esta seguro de restaurar el punto de control');
+                                        $("button#modal_boton").text('Cancelar');
+                                    })
+                                ))
+                );
+                //$tr.appendTo('table#tabla_punto_control tbody');
+                $tabla.row.add($tr).draw();
+            });
+        });
+    });
+    </script>
+    <script>
+        $(document).on('ready',function(){
+            $("button.restaurar").on('click',function(e){
+                $("button.restaurar").attr("disabled", 'true');
+                var id_puntocontrol = $("input#modal_idPuntoControl").attr('value');
+                $.ajax({
+                    url:"{% url "punto_control:punto_control_restaurar" %}",
+                    headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                    data: {"id":id_puntocontrol},
+                    type:'DELETE',
+                    dataType:'json'
+                }).done(function(data){
+                    if(data.exito){
+                        var table = $('#tabla_punto_control').DataTable();
+                        table.row("#tr"+id_puntocontrol).remove().draw();
+                        //$("#tr"+id_puntocontrol).remove();
+                        $('div#modal_restaurar').modal('hide');
+                        $.notify({// options
+                                    icon: 'fa fa-recycle ',
+                                    title: '<strong>¡RESTAURACIÓN CORRECTA!</strong><br>',
+                                    message: 'Se ha restaurado el punto de control correctamente.'
+                                }, {// settings
+                                    type: 'warning',
+                                    placement: {
+                                        from: "top",
+                                        align: "center"
+                                    }
+                                }
+                        );
+                    }
+                });
+            })
+        });
+    </script>
+{% endblock %}

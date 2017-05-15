@@ -1,0 +1,68 @@
+{% extends "base/base.html" %}
+
+{% block pageheader %}
+Modificar Correo
+{% endblock %}
+{% block subpageheader %}
+
+{% endblock %}
+ {% block breadcrumbs %}
+     <div class="col-sm-5 text-right hidden-xs" xmlns="http://www.w3.org/1999/html">
+         <ol class="breadcrumb push-10-t">
+             <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+             <li><a class="link-effect" href="#">Modificar Correo</a></li>
+         </ol>
+     </div>
+{% endblock breadcrumbs %}
+{% block content %}
+
+    <div class="content overflow-hidden">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
+                    <!-- Block -->
+                <div class="block block-themed animated fadeIn">
+                    <div class="block-header bg-primary">
+                        <h3 class="block-title">Modificar Correo</h3>
+                    </div>
+                    <div class="block-content block-content-full block-content-narrow">
+                        <form id="modificar_correo" class="js-validation-reminder form-horizontal push-30-t push-50"  method="post">
+                            <input type="hidden" value="{{ csrf_token }}" name="csrfmiddlewaretoken">
+                            <div class="form-group">
+                                <div class="col-xs-12">
+                                    <div class="form-material form-material-primary">
+                                        {{ form.email }}
+                                        <label for="{{ form.email.name }}">{{ form.email.label }}</label>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="row">
+                                <div class="col-xs-12 col-sm-12 col-md-12">
+                                    <div class="col-sm-6">
+                                        <button class="btn btn-block btn-primary" type="submit"> Guardar </button>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <a class="btn btn-block btn-danger" href="{% url 'home' %}" type="button"> Cancelar </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/messages_es.min.js' %}"></script>
+    <script src="{% static 'usuario/js/email_form_validation.js' %}"></script>
+    <script>
+    $(document).ready(function() {
+        "use strict";
+        var email = "{{ user.email }}";
+        $("input#id_email").val(email);
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "base/base.html" %}
+{% block extrastatic %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/jquery-ui/jquery-ui.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/bootstrap-datepicker/bootstrap-datepicker3.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.css' %}">
+{% endblock %}
+{% block pageheader %}
+    Mi Bitácora
+{% endblock %}
+{% block subpageheader %}
+    Control de Acceso
+{% endblock %}
+{% block breadcrumbs %}
+    <div class="col-sm-5 text-right hidden-xs" xmlns="http://www.w3.org/1999/html">
+        <ol class="breadcrumb push-10-t">
+            <li><a class="link-effect" href="{% url 'home' %}">Inicio</a></li>
+            <li><a class="link-effect" href="">Bitacora</a></li>
+        </ol>
+    </div>
+{% endblock %}
+
+{%  block content %}
+                    <!-- Dynamic Table Full -->
+                        <div class="block-content">
+                            <div id="fecha" class="col-sm-7 col-sm-offset-1">
+                                <div class="form-group col-sm-12">
+                                    <div class="input-daterange input-group" data-date-format="yyyy-mm-dd">
+                                        <span class="input-group-addon">Por Fecha: </span>
+                                        <input class="form-control" type="text" id="fecha_inicio" name="fecha_inicio" placeholder="De">
+                                        <span class="input-group-addon"><i class="fa fa-chevron-right"></i></span>
+                                        <input class="form-control" type="text" id="fecha_fin" name="fecha_fin" placeholder="A">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- DataTables init on table by adding .js-dataTable-full class, functionality initialized in js/pages/base_tables_datatables.js -->
+                            <table id="tabla_bitacora" class="table table-bordered table-striped js-dataTable-full">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%;">Registro</th>
+                                        <th style="width: 5%;">Ubicación</th>
+                                        <th style="width: 5%;">Fecha y Hora</th>
+                                        <th style="width: 5%;">Foto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    <!-- END Dynamic Table Simple -->
+{% endblock %}
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/plugins/bootstrap-datepicker/bootstrap-datepicker.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/datatables/fnReloadAjax.js' %}"></script>
+    <script src="{% static 'bitacora/js/bitacora_datatable.js' %}"></script>
+    <script>
+        $(function () {
+            // Init page helpers (BS Datepicker + BS Colorpicker + Select2 + Masked Input + Tags Inputs plugins)
+            App.initHelpers('datepicker');
+        });
+    </script>
+    <script>
+    $(document).on('ready',function(){
+        "use strict";
+        var idioma = {
+            sProcessing: "Procesando...",
+            sLengthMenu: "Mostrar _MENU_ registros",
+            sZeroRecords: "No se encontraron resultados",
+            sEmptyTable: "Ningún dato disponible en esta tabla",
+            sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+            sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+            sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+            sInfoPostFix: "",
+            sSearch: "Buscar:",
+            sUrl: "",
+            sInfoThousands: ",",
+            sLoadingRecords: "Cargando...",
+            oPaginate: {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            oAria: {
+                "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        };
+        var row_callback = function(nRow, aData, IdisplayIndex) {
+            var $tr = $(nRow);
+            var $td_foto = $('<div>').attr('class','btn-group');
+            var registro, contenido;
+            if(aData.foto == null){
+                $td_foto.append($('<i>').attr('class','fa  fa-remove'));
+            }
+            else{
+                registro = '<img class="img-responsive" style="width: auto; width: auto;" src="'+aData.foto.foto+'">';
+                contenido = '<div class = "btn-group">'+registro+'</div>';
+                $td_foto.append($('<i>').append($('<img>').attr({"style":"width: 100%; height: 100%;","src":aData.foto.foto})).popover(
+                        {trigger:'hover', content: contenido, html: true, placement: "left", container: 'body'}));
+            }
+            var hijos_tr = $tr.children();
+            $(hijos_tr[3]).empty().append($td_foto).attr({'class':'col-sm-1 text-center','style':'width: 5%;'});
+            var $evento;
+            if (aData.evento=='Entrada')
+                $evento = $('<span>').attr({'class':'label label-primary'}).text(aData.evento);
+            else if (aData.evento=='Salida')
+                $evento= $('<span>').attr({'class':'label label-danger'}).text(aData.evento);
+            else if (aData.evento=='Salida a Comer')
+                $evento= $('<span>').attr({'class':'label label-success'}).text(aData.evento);
+            else if (aData.evento=='Regreso de Comer')
+                $evento= $('<span>').attr({'class':'label', 'style': 'background-color: #8A2BE2'}).text(aData.evento);
+            else if (aData.evento=='Entrada Retardo')
+                $evento= $('<span>').attr({'class':'label label-primary', 'style': 'color: #FFFF00'}).text(aData.evento);
+            else if (aData.evento=='Salida Temprana')
+                $evento= $('<span>').attr({'class':'label label-danger', 'style': 'color: #FFFF00'}).text(aData.evento);
+            $(hijos_tr[0]).empty().append($evento);
+        };
+        var columns = [];
+        $.each(['evento', 'ubicacion','fecha_hora', 'id'],function
+                (index,item){
+            columns.push({"mData": item});
+        });
+        var $tabla = $('table#tabla_bitacora').DataTable({
+            order: [[ 2, "asc" ]],
+            sAjaxSource: "{% url 'bitacora:bitacora_lista' %}",
+            bServerSide: true,
+            aoColumns: columns,
+            fnRowCallback: row_callback,
+            columnDefs: [ { orderable: false, targets: [ 3 ] } ],
+            pageLength: 10,
+            lengthMenu: [[5, 10, 15, 20], [5, 10, 15, 20]],
+            language: idioma
+        });
+        var $divrow = $('div#tabla_bitacora_wrapper div.row:first');
+        var hijosdiv = $divrow.children();
+        $(hijosdiv[0]).attr('class','col-sm-2');
+        $(hijosdiv[1]).attr('class','col-sm-2');
+        var $fecha = $('div#fecha');
+        $divrow.append($fecha);
+        var hoy = $.datepicker.formatDate('yy-mm-dd', new Date());
+        $('input#fecha_inicio').on('change', function () {
+            var fini = $('input#fecha_inicio');
+            var ffin = $('input#fecha_fin');
+            if(fini.val()=="" || fini==null)
+                fini.val(ffin.val());
+            else if(ffin.val()=="" || ffin==null)
+                ffin.val(fini.val());
+            buscarxFechas();
+        }).val(hoy);
+        $('input#fecha_fin').on('change', function () {
+            var ffin = $('input#fecha_fin');
+            var fini = $('input#fecha_inicio');
+            if(ffin.val()=="" || ffin==null)
+                ffin.val(fini.val());
+            else if(fini.val()=="" || fini==null)
+                fini.val(ffin.val());
+            buscarxFechas();
+        }).val(hoy);
+        function obtenerFechas() {
+            return $('input#fecha_inicio').val()+"_"+$('input#fecha_fin').val();
+        }
+        function buscarxFechas() {
+            var fechas = obtenerFechas();
+            $tabla.search(fechas).draw();
+        }
+        buscarxFechas();
+    });
+    </script>
+{% endblock %}

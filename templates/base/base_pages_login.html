@@ -1,0 +1,38 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<!--[if IE 9]>         <html class="ie9 no-focus"> <![endif]-->
+<!--[if gt IE 9]><!--> <html class="no-focus"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <title>Control de Acceso - {% block title %}{% endblock %}</title>
+
+        <meta name="description" content="Control de Acceso">
+        <meta name="author" content="Incubasoft">
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0">
+		{% include "base/statichead.html" %}
+		<!-- Page JS Plugins CSS -->
+        {% block extrastatic %}
+        {% endblock %}
+        <!-- OneUI CSS framework -->
+        <link rel="stylesheet" id="css-main" href="{% static 'assets/css/oneui.css' %}">
+    </head>
+    <body>
+        {% block content %}
+        {% endblock %}
+        <!-- Login Footer -->
+        {% block footer %}
+            <footer id="page-footer" class="content-mini content-mini-full font-s12 clearfix">
+                <div class="push-10-t text-center animated fadeInUp">
+                    2016 &copy; Incubasoft
+                </div>
+            </footer>
+        {% endblock %}
+        <!-- END Login Footer -->
+
+        {% include "base/staticscripts.html" %}
+        <!-- Page JS Code -->
+        {% block extrajs %}
+        {% endblock %}
+    </body>
+</html>

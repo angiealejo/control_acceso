@@ -1,0 +1,514 @@
+{% extends "base/base.html" %}
+{% load groups_extras %}
+{% block pageheader %}
+    Hola {{ user.first_name }} {{ user.last_name }}
+{% endblock %}
+{% block subpageheader %}
+    Bienvenido
+{% endblock %}
+{% block content %}
+    {% ifusergroup empleado %}
+        <!--Modal Configurar-->
+        <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_error" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">AVISO</h3>
+                        </div>
+                        <div class="block-content">
+                            <span id="modal_error_mensaje">
+                            </span>
+                        </div>
+                        <div class="modal-footer">
+                            <a id="modal_error_abutton" href="" class="btn btn-primary"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Configurar-->
+        <!--Modal PI-->
+        <div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" id="modal_pi" >
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">PUNTO DE ACCESO - INSTALACIÓN</h3>
+                        </div>
+                        <div id="modal_pi_consulta" class="block-content">
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="modal_idPI" name="pi_id">
+                            <button id="modal_boton" class="btn btn-sm btn-primary" type="button" data-dismiss="modal" aria-hidden="true">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal PI-->
+        <!--Modal Email-->
+        <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_email" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div id="block_email" class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">Cambiar email</h3>
+                        </div>
+                        <div class="block-content">
+                            <form id="modificar_correo" action="{% url 'usuario:email_api' %}" method="post" class="js-validation-reminder form-horizontal push-30-t push-50">
+                                <div class="form-group">
+                                    <div class="col-sm-12">
+                                        <div class="form-material form-material-primary">
+                                            <input class="form-control" id="id_email" name="email" type="email" />
+                                            <label for="email">Ingrese el nuevo Email</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group text-center">
+                                    <input type="hidden" id="flag" value="T">
+                                    <input id="modal_boton_aceptar" class="btn btn-sm btn-primary guardar" type="submit" value="Cambiar">
+                                    <button id="modal_boton_cancelar" class="btn btn-sm btn-danger" type="button" data-dismiss="modal" aria-hidden="true">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Email-->
+    <!--Modal Eliminar Huella-->
+        <div style="display: none; margin-top: 220px;" class="modal fade" id="modal_huella_digital_borrar" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-top">
+                <div class="modal-content">
+                    <div id="block_huella" class="block block-themed block-transparent remove-margin-b">
+                        <div class="block-header bg-primary-dark">
+                            <h3 class="block-title">Borrar Huella Digital</h3>
+                        </div>
+                        <div class="block-content">
+                            <span id="mensaje_huella_digital">
+                                Su huella digital, que previamente registro desde un punto de control al hacer un registro.
+                                Es una forma mas facil de realizar registros de modo que en lugar de teclear su numero de empleado
+                                y luego su contraseña, solo debe escanear su huella digital en el sensor, mientras este se encuentre
+                                conectado y en linea en el cliente del punto de control de acceso. Si la borra se le pedira que
+                                registre otra de nuevo.
+                            </span><br><br>
+                            <div class="form-group text-center">
+                                <input id="btn_borrar_huella_digital" class="btn btn-sm btn-danger" type="button" value="Eliminar">
+                                <button id="btn_boton_huella_digital" class="btn btn-sm btn-primary" type="button" data-dismiss="modal" aria-hidden="true">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!--Fin Modal Eliminar Huella-->
+        <div class="row" id="row1">
+            <div class="col-sm-5 col-sm-offset-1">
+                <div class="block" style="margin-top: 25px">
+                    <div class="block-header">
+                        <ul class="block-options">
+                            <li>
+                                <a id="id_editar" type="button" href="{% url 'usuario:editar' %}" data-toggle="tooltip" title="Editar Datos"><i class="si si-pencil"></i></a>
+                            </li>
+                        </ul>
+                        <h3 class="block-title">Mis Datos</h3>
+                    </div>
+                    <div class="block-content">
+                        <div id="datos_empleado">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-5 ">
+                <div class="block" style="margin-top: 25px">
+                    <div class="block-header">
+                        <ul class="block-options">
+                            <li>
+                                <a type="button" href="{% url 'usuario:usuario_direccion' %}" data-toggle="tooltip" title="Editar Dirección"><i class="si si-pencil"></i></a>
+                            </li>
+                        </ul>
+                        <h3 class="block-title">Mi Dirección</h3>
+                    </div>
+                    <div class="block-content">
+                        <div id="direccion_usuario">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row" id="row3">
+            <div class="col-sm-10 col-sm-offset-1">
+                <div class="block" style="margin-top: 25px">
+                    <div class="block-header">
+                        <h3 class="block-title">Aun no terminas</h3>
+                    </div>
+                    <div class="block-content">
+                        <div id="terminar">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endifusergroup %}
+
+{% endblock %}
+
+{% block extrajs %}
+    {% load staticfiles %}
+    <script src="{% static 'assets/js/csfr.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/jquery-validation/messages_es.min.js' %}"></script>
+    <script src="{% static 'usuario/js/email_form_validation.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            "use strict";
+            function cargar()
+            {       $.ajax({url: "{% url 'empleado:datos_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{usuario:true},
+                        dataType:"json",
+                        type:"GET"
+                    }).done(function(data){
+                $.notify({// options
+                    icon: 'fa fa-info-circle',
+                    title: '<strong>¡BIENVENIDO!</strong><br>',
+                    message: 'Este es el Control de Acceso. Bienvenido'+
+                            '{% ifusergroup administrador %} Usuario Administrador{% else %}' +
+                            '{% ifusergroup recursos_humanos %} Usuario de Recursos Humanos{% else %}'+
+                            '{% ifusergroup configurador %} Usuario Configurador{% else %} Usuario Empleado'+
+                            '{% endifusergroup %}{% endifusergroup %}{% endifusergroup %}.'
+                }, {// settings
+                    type: 'info',
+                    placement: {
+                        from: "top",
+                        align: "center"
+                    }
+                }
+                );
+                if(data.foto == null){
+                   $('<div>').attr({'class':'row'}).append(
+                            $('<div>').append(
+                            $('<img>').attr({'class':'img-responsive', 'id':'id_foto_imagen','src':'{% static 'assets/img/anonymous-user.gif' %}','style':'width: 100%; height: auto;'}),
+                            $('<br>'),
+                            $('<br>')
+                          ).attr({'class':'img-container col-md-6 col-md-offset-3'}).append($('<div>').attr({'class':'img-options'}
+                            ).append(
+                            $('<div>').attr({'class':'img-options-content'}
+                                ).append
+                            ($('<a>').text('Subir Foto ').attr({'class':'btn btn-md btn-default','type':'button','href':'{% url 'usuario:subir_foto_administrador' %}'}
+                                    ).append($('<i>').attr({'class':'fa fa-pencil'}))
+                            )
+                            )
+                            )
+                    ).appendTo('div#datos_empleado');
+                }
+                else{
+                    $('<div>').attr({'class':'row'}).append(
+                            $('<div>').append(
+                            $('<img>').attr({'class':'img-responsive', 'id':'id_foto_imagen','src':data.foto.foto,'style':'width: 100%; height: auto;'}),
+                            $('<br>'),
+                            $('<br>')
+                    ).attr({'class':'img-container col-md-6 col-md-offset-3'}).append($('<div>').attr({'class':'img-options'}
+                            ).append(
+                            $('<div>').attr({'class':'img-options-content'}
+                                ).append
+                            ($('<a>').text('Cambiar Foto ').attr({'class':'btn btn-md btn-default','type':'button','href':'{% url 'usuario:cambiar_foto_administrador' %}'}
+                                    ).append($('<i>').attr({'class':'fa fa-pencil'}))
+                            )
+                            )
+                            )
+                    ).appendTo('div#datos_empleado');
+                }
+
+                $('<div>').append(
+                        $('<label>').text('Nombre: '),
+                        $('<h4>').text(data.empleado.nombre + ' '+ data.empleado.apellido_paterno+' '+data.empleado.apellido_materno),
+                        $('<label>').text('Email: '),
+                        $('<a>').attr({"id":"id_cambiar_email","href":"#modal_email","data-toggle":"modal","title":"Cambiar Email"}).tooltip({placement:'left'}).append(
+                                $('<h4>').attr('id','h4email').text(data.usuario.email)).click(function(){
+                            $("input#id_email").val($("h4#h4email").text());
+                            $("input#modal_boton_aceptar").removeAttr("disabled");
+                        }),
+                        $('<label>').text('Número de Empleado y Nombre de Usuario: '),
+                        $('<h4>').text(data.numero_empleado),
+                        $('<label>').text('Hora Entrada: '),
+                        $('<h4>').text(data.hora_entrada.substring(0,5)),
+                        $('<label>').text('Hora Salida: '),
+                        $('<h4>').text(data.hora_salida.substring(0,5))
+                ).appendTo('div#datos_empleado');
+                $('<br>').appendTo('div#datos_empleado');
+                if(data.empleado.curp.length != 0)
+                    $('<div>').append(
+                        $('<label>').text('CURP: '),
+                        $('<h4>').text(data.empleado.curp)
+                ).appendTo('div#datos_empleado');
+                if(data.empleado.rfc.length != 0)
+                    $('<div>').append(
+                        $('<label>').text('RFC: '),
+                        $('<h4>').text(data.empleado.rfc)
+                ).appendTo('div#datos_empleado');
+                if (data.huelladigital != null){
+                    $('<a>').attr({"id":"a_borrar_huella_digital","href":"#modal_huella_digital_borrar","data-toggle":"modal","title":"Borrar Huella Digital"}
+                    ).tooltip({placement:'left'}).append(
+                            $('<h4>').text("Huella Digital Registrada ").append($('<i>').attr('class','fa fa-key'))).appendTo('div#datos_empleado');
+                }
+                $('<br>').appendTo('div#datos_empleado');
+                if (data.empleado.direccion.calle.length != 0)
+                $('<div>').append(
+                        $('<label>').text('Calle: '),
+                        $('<h4>').text(data.empleado.direccion.calle)
+                ).appendTo('div#direccion_usuario');
+                if (data.empleado.direccion.numero_exterior.length != 0)
+                $('<div>').append(
+                        $('<label>').text('Numero Exterior: '),
+                        $('<h4>').text(data.empleado.direccion.numero_exterior)
+                ).appendTo('div#direccion_usuario');
+                if (data.empleado.direccion.numero_interior.length != 0)
+                $('<div>').append(
+                        $('<label>').text('Numero Interior: '),
+                        $('<h4>').text(data.empleado.direccion.numero_interior)
+                ).appendTo('div#direccion_usuario');
+                if (data.empleado.direccion.asentamiento.length != 0)
+                $('<div>').append(
+                        $('<label>').text('Asentamiento: '),
+                        $('<h4>').text(data.empleado.direccion.asentamiento)
+                ).appendTo('div#direccion_usuario');
+                 if (data.empleado.direccion.codigo_postal.length != 0)
+                $('<div>').append(
+                        $('<label>').text('Código Postal: '),
+                        $('<h4>').text(data.empleado.direccion.codigo_postal)
+                ).appendTo('div#direccion_usuario');
+                 if (data.empleado.direccion.ciudad.length != 0)
+                $('<div>').append(
+                        $('<label>').text('Ciudad: '),
+                        $('<h4>').text(data.empleado.direccion.ciudad)
+                ).appendTo('div#direccion_usuario');
+                if (data.empleado.direccion.municipio.length != 0)
+                    $('<div>').append(
+                            $('<label>').text('Municipio: '),
+                            $('<h4>').text(data.empleado.direccion.municipio)
+                        ).appendTo('div#direccion_usuario');
+                if (data.empleado.direccion.estado.length != 0)
+                    $('<div>').append(
+                            $('<label>').text('Estado: '),
+                            $('<h4>').text(data.empleado.direccion.estado)
+                    ).appendTo('div#direccion_usuario');
+                if (data.empleado.direccion.datos_adicionales.length != 0)
+                    $('<div>').append(
+                            $('<label>').text('Datos Adicionales: '),
+                            $('<h4>').text(data.empleado.direccion.datos_adicionales)
+                    ).appendTo('div#direccion_usuario');
+
+                if (data.puntocontrol.length>0){
+                    $('<h4>').text("Mis Puntos de Acceso e Instalaciones").appendTo('div#datos_empleado');
+                    $.each(data.puntocontrol, function(i,e){
+                        $('<a>').attr({"id":data.puntocontrol[i].id,"class":"modal_pi","href":"#modal_pi","data-toggle":"modal","title":"Ver Dirección"}).tooltip({placement:'left'}).append(
+                                $('<h4>').text(data.puntocontrol[i].nombre+' - '+data.puntocontrol[i].instalacion.nombre)
+                        ).click(function(){
+                            var idPI = $(this).attr('id');
+                            $('div#modal_pi_consulta').empty();
+                            $.ajax({url: "{% url 'punto_control:punto_control_api' %}",
+                                headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                                data:{punto_control:idPI},
+                                dataType:"json",
+                                type:"GET"
+                            }).done(function(data) {
+                                $('<div>').append(
+                                        $('<label>').text('Nombre del Punto de Acceso: '+data.nombre)
+                                ).appendTo('div#modal_pi_consulta');
+                                $('<div>').append(
+                                        $('<label>').text('Nombre de la Instalación: '+data.instalacion.nombre)
+                                    ).appendTo('div#modal_pi_consulta');
+                                if (data.instalacion.direccion.completa.length != 0) {
+                                    $('<div>').append(
+                                            $('<label>').text('Dirección:')
+                                    ).appendTo('div#modal_pi_consulta');
+                                    $('<div>').append(
+                                            $('<label>').text(data.instalacion.direccion.completa)
+                                    ).appendTo('div#modal_pi_consulta');
+                                }
+                            });
+                        }).appendTo('div#datos_empleado');
+                    });
+                }
+                {% ifusergroup empleado %}
+                var puntocontrol = data.puntocontrol.length;
+                $.ajax({url: "{% url 'configuracion:configuracion_api' %}",
+                        headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                        data:{servidor:true},
+                        dataType:"json",
+                        type:"GET"
+                            }).done(function(data) {
+                            $.ajax({url: "{% url 'punto_control:punto_control_api' %}",
+                                headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                                data:{lista:'puntocontrol',activo:1},
+                                dataType:"json",
+                                type:"GET"
+                            }).done(function(data) {
+                                if (data.length == 0){
+                                    {% ifusergroup administrador|configurador %}
+                                    $('span#modal_error_mensaje').text('Para poder registrar empleados de forma correcta debe registrar instalaciones y puntos de control para estas, acto seguido asignese como administrador sus puntos de control.');
+                                    $('a#modal_error_abutton').attr('href','{% url 'instalacion:instalacion_list' %}').text('Registrar instalaciones y puntos de control');
+                                    $('div#modal_error').modal('show');
+                                    {% endifusergroup %}
+                                }
+                                else if(puntocontrol == 0){
+                                    $('span#modal_error_mensaje').text('Ya hay puntos de control disponibles. Asignese sus puntos de control.');
+                                    $('a#modal_error_abutton').attr('href','{% url 'usuario:editar' %}').text('Asignar puntos de control');
+                                    $('div#modal_error').modal('show');
+                                }
+                            });
+                            }).fail(function(){
+                            {% ifusergroup administrador|configurador %}
+                            $('span#modal_error_mensaje').text('Para que las terminales funcionen correctamente configure el servidor, de otra forma si intenta añadir configuraciones específicas de empleado ó visualizar la lista de estas no podra hacerlo y se le redigirá al servidor.');
+                            $('a#modal_error_abutton').attr('href','{% url 'configuracion:configuracion_servidor' %}').text('Configurar Servidor General');
+                            $('div#modal_error').modal('show');
+                            {% endifusergroup %}
+                        });
+                {% endifusergroup %}
+            }).fail(function(){
+                $('<div>').append(
+                        $('<label>').text('Notamos que intentas saltarte la continuación del registro, te suplicamos que termines tu registro en Control de Acceso.'),
+                        $('<br>'),
+                        $('<br>'),
+                        $('<a>').attr({'class':'btn btn-ls btn-info','type':'button','href':'{% url 'usuario:registro' %}'}).text('Terminar Registro'),
+                        $('<br>'),
+                        $('<br>')
+                        ).appendTo('div#terminar');
+                })
+            }
+            cargar();
+            $("form#modificar_correo").submit(function(event){
+                $("button#modal_boton_cancelar").attr("disabled", 'true');
+                App.blocks('div#block_email','state_loading');
+                var flag = $("input#flag").val();
+                if(flag=='T'){
+                    var email = $("input#id_email").val();
+                    $("input#modal_boton_aceptar").attr("disabled", 'true');
+                    $.ajax( {   type: 'POST',
+                                headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                                url: $(this).attr('action'),
+                                data: {"email":email},
+                        complete: function () {
+                            $('div#modal_email').modal('hide');
+                            $("button#modal_boton_cancelar").removeAttr("disabled");
+                            App.blocks('div#block_email','state_normal');
+                        },
+                        fail: function () {
+                                $.notify({// options
+                                    icon: 'fa fa-close',
+                                    title: '<strong>¡ERROR!</strong><br>',
+                                    message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                                }, {// settings
+                                    type: 'danger',
+                                    placement: {
+                                        from: "top",
+                                        align: "center"
+                                    }
+                                });
+                        },
+                        success: function(data) {
+                            if(data.exito){
+                                $("h4#h4email").text(data.email);
+                                $.notify(
+                                        {// options
+                                            icon: 'fa fa-check ',
+                                            title: '<strong>¡CAMBIO DE EMAIL CORRECTO!</strong><br>',
+                                            message: 'Se ha cambiado la dirección de correo de forma correcta.'
+                                        }, {
+                                            // settings
+                                            type: 'success',
+                                            placement: {
+                                                from: "top",
+                                                align: "center"
+                                            }
+                                        }
+                                );
+                            }
+                            else{
+                                $.notify({// options
+                                    icon: 'fa fa-close',
+                                    title: '<strong>¡ERROR!</strong><br>',
+                                    message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                                }, {// settings
+                                    type: 'danger',
+                                    placement: {
+                                        from: "top",
+                                        align: "center"
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+            $("input#btn_borrar_huella_digital").click(function () {
+                $("input#btn_borrar_huella_digital").attr('disabled', 'true');
+                $("button#btn_boton_huella_digital").attr('disabled', 'true');
+                App.blocks('div#block_huella','state_loading');
+                $.ajax( {
+                    type: 'DELETE',
+                    headers: { 'Authorization' : 'Token {{ request.session.token }}' },
+                    url: "{% url 'archivo:borrar_huella_digital' %}",
+                    complete: function () {
+                        $('div#modal_huella_digital_borrar').modal('hide');
+                        $("input#btn_borrar_huella_digital").removeAttr('disabled');
+                        $("button#btn_boton_huella_digital").removeAttr('disabled');
+                        App.blocks('div#block_huella','state_normal');
+                    },
+                    fail: function () {
+                                $.notify({// options
+                                    icon: 'fa fa-close',
+                                    title: '<strong>¡ERROR!</strong><br>',
+                                    message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                                }, {// settings
+                                    type: 'danger',
+                                    placement: {
+                                        from: "top",
+                                        align: "center"
+                                    }
+                                });
+                        },
+                    success: function(data) {
+                        if(data.exito){
+                            $('input#btn_borrar_huella_digital').remove();
+                            $('a#a_borrar_huella_digital').remove();
+                            $.notify(
+                                    {// options
+                                        icon: 'fa fa-check ',
+                                        title: '<strong>¡HA BORRADO SU HUELLA DIGITAL!</strong><br>',
+                                        message: 'Se ha borrado su huella digital correctamente.'
+                                    }, {
+                                        // settings
+                                        type: 'success',
+                                        placement: {
+                                            from: "top",
+                                            align: "center"
+                                        }
+                                    }
+                            );
+                        }
+                        else{
+                            $.notify({// options
+                                icon: 'fa fa-close',
+                                title: '<strong>¡ERROR!</strong><br>',
+                                message: 'Ha ocurrido un error. Intente de nuevo mas tarde.'
+                            }, {// settings
+                                type: 'danger',
+                                placement: {
+                                    from: "top",
+                                    align: "center"
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
